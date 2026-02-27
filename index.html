@@ -2,40 +2,58 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pigpen Cipher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Samsung</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0a0f;
     --surface: #12121a;
     --border: #2a2a3a;
-    --gold: #c9a84c;
-    --gold-dim: #8a7033;
-    --gold-glow: rgba(201, 168, 76, 0.15);
+    --accent: #c9a84c;
+    --accent-dim: #8a7033;
+    --accent-glow: rgba(201, 168, 76, 0.15);
     --text: #e8e4d9;
     --text-dim: #7a7668;
     --red: #a44;
+    --bottom-nav-h: 60px;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  [data-theme="orange"] {
+    --bg: #1a0f05; --surface: #2a1a0a; --border: #4a3018;
+    --accent: #ff8c00; --accent-dim: #cc7000; --accent-glow: rgba(255,140,0,0.15);
+    --text: #ffe8cc; --text-dim: #a08060;
+  }
+  [data-theme="red"] {
+    --bg: #120808; --surface: #1e1010; --border: #3a2020;
+    --accent: #e04040; --accent-dim: #a03030; --accent-glow: rgba(224,64,64,0.15);
+    --text: #f0d8d8; --text-dim: #906060;
+  }
+  [data-theme="black"] {
+    --bg: #000000; --surface: #0a0a0a; --border: #222222;
+    --accent: #888888; --accent-dim: #555555; --accent-glow: rgba(136,136,136,0.1);
+    --text: #cccccc; --text-dim: #666666;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   body {
     background: var(--bg);
     color: var(--text);
     font-family: 'JetBrains Mono', monospace;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
+    transition: background 0.4s, color 0.4s;
   }
 
-  /* Background texture */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background: 
-      radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.03) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 50%, rgba(201,168,76,0.02) 0%, transparent 50%);
+    background:
+      radial-gradient(ellipse at 20% 50%, var(--accent-glow) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 50%, var(--accent-glow) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
   }
@@ -43,24 +61,28 @@
   .container {
     max-width: 900px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 30px 20px 80px;
     position: relative;
     z-index: 1;
   }
 
-  /* Header */
+  /* ─── HEADER ─── */
   .header {
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: 24px;
     position: relative;
   }
 
-  .chart-copy-btn {
+  .header-actions {
     position: absolute;
     top: 0;
     right: 0;
-    width: 44px;
-    height: 44px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .icon-btn {
+    width: 40px; height: 40px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -70,492 +92,625 @@
     justify-content: center;
     transition: all 0.3s;
   }
-
-  .chart-copy-btn:hover {
-    border-color: var(--gold);
-    background: var(--gold-glow);
-  }
-
-  .chart-copy-btn svg {
-    width: 20px;
-    height: 20px;
-    stroke: var(--gold-dim);
-    fill: none;
-    stroke-width: 2;
-    transition: stroke 0.3s;
-  }
-
-  .chart-copy-btn:hover svg {
-    stroke: var(--gold);
-  }
-
-  .chart-copy-btn .tooltip {
-    position: absolute;
-    top: 52px;
-    right: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 0.65rem;
-    color: var(--text-dim);
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .chart-copy-btn:hover .tooltip {
-    opacity: 1;
-  }
+  .icon-btn:hover, .icon-btn:active { border-color: var(--accent); background: var(--accent-glow); }
+  .icon-btn svg { width: 18px; height: 18px; stroke: var(--accent-dim); fill: none; stroke-width: 2; transition: stroke 0.3s; }
+  .icon-btn:hover svg { stroke: var(--accent); }
 
   .header h1 {
     font-family: 'Cinzel', serif;
     font-weight: 900;
     font-size: 2.8rem;
     letter-spacing: 0.15em;
-    color: var(--gold);
-    text-shadow: 0 0 40px rgba(201,168,76,0.2);
-    margin-bottom: 8px;
+    color: var(--accent);
+    text-shadow: 0 0 40px var(--accent-glow);
+    margin-bottom: 4px;
+    transition: color 0.4s;
   }
 
   .header .subtitle {
-    font-size: 0.75rem;
-    letter-spacing: 0.4em;
+    font-size: 0.7rem;
+    letter-spacing: 0.35em;
     text-transform: uppercase;
     color: var(--text-dim);
+  }
+
+  .theme-badge {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 1.1rem;
+    min-height: 1.3em;
   }
 
   .header::after {
     content: '';
     display: block;
-    width: 120px;
+    width: 100px;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
-    margin: 20px auto 0;
+    background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
+    margin: 14px auto 0;
   }
 
-  /* Mode Toggle */
-  .mode-toggle {
+  /* ─── BOTTOM NAV (mobile) ─── */
+  .bottom-nav {
+    display: none;
+  }
+
+  /* ─── TOP TAB NAV (desktop) ─── */
+  .tab-nav {
     display: flex;
     justify-content: center;
     gap: 0;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
   }
 
-  .mode-btn {
-    padding: 12px 36px;
+  .tab-btn {
+    padding: 11px 28px;
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text-dim);
     font-family: 'Cinzel', serif;
-    font-size: 0.85rem;
-    letter-spacing: 0.12em;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
     cursor: pointer;
     transition: all 0.3s ease;
   }
+  .tab-btn:first-child { border-radius: 6px 0 0 6px; }
+  .tab-btn:last-child { border-radius: 0 6px 6px 0; }
+  .tab-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; }
+  .tab-btn:hover:not(.active) { border-color: var(--accent-dim); color: var(--text); }
 
+  /* ─── MODE TOGGLE ─── */
+  .mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+
+  .mode-btn {
+    padding: 10px 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
   .mode-btn:first-child { border-radius: 6px 0 0 6px; }
   .mode-btn:last-child { border-radius: 0 6px 6px 0; }
+  .mode-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; }
+  .mode-btn:hover:not(.active) { border-color: var(--accent-dim); color: var(--text); }
 
-  .mode-btn.active {
-    background: var(--gold);
-    color: var(--bg);
-    border-color: var(--gold);
-    font-weight: 700;
-  }
+  /* ─── SECTIONS ─── */
+  .tab-content { display: none; }
+  .tab-content.show { display: block; }
 
-  .mode-btn:hover:not(.active) {
-    border-color: var(--gold-dim);
-    color: var(--text);
-  }
-
-  /* Main Sections */
-  .workspace {
-    display: grid;
-    gap: 30px;
-  }
+  .workspace { display: grid; gap: 18px; }
 
   .panel {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 28px;
+    padding: 20px;
     position: relative;
+    transition: background 0.4s, border-color 0.4s;
   }
 
   .panel-label {
     font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.3em;
+    font-size: 0.68rem;
+    letter-spacing: 0.25em;
     text-transform: uppercase;
-    color: var(--gold-dim);
-    margin-bottom: 16px;
+    color: var(--accent-dim);
+    margin-bottom: 10px;
   }
+
+  /* ─── COLLAPSIBLE PANEL ─── */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .panel-header .panel-label { margin-bottom: 0; }
+
+  .panel-toggle {
+    width: 24px; height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 1rem;
+    transition: transform 0.3s;
+  }
+
+  .panel-body {
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.3s ease;
+    opacity: 1;
+    margin-top: 12px;
+  }
+
+  .panel-body.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+  }
+
+  .panel-toggle.rotated { transform: rotate(180deg); }
 
   textarea {
     width: 100%;
-    min-height: 100px;
+    min-height: 80px;
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 16px;
+    padding: 12px;
     color: var(--text);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 1rem;
+    font-size: 0.95rem;
     resize: vertical;
     outline: none;
     transition: border-color 0.3s;
   }
+  textarea:focus { border-color: var(--accent-dim); }
+  textarea::placeholder { color: var(--text-dim); font-style: italic; }
 
-  textarea:focus {
-    border-color: var(--gold-dim);
-  }
-
-  textarea::placeholder {
-    color: var(--text-dim);
-    font-style: italic;
-  }
-
-  /* Cipher Output */
+  /* ─── CIPHER OUTPUT ─── */
   .cipher-display {
-    min-height: 120px;
+    min-height: 80px;
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 20px;
+    padding: 14px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 4px;
     line-height: 1;
   }
+  .cipher-display .word-group { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .cipher-separator { color: var(--accent); font-size: 1.8rem; font-weight: 700; font-family: 'Cinzel', serif; line-height: 40px; margin: 0 6px; user-select: none; }
+  .cipher-display canvas { display: inline-block; vertical-align: middle; }
+  .placeholder-text { color: var(--text-dim); font-style: italic; font-size: 0.8rem; }
 
-  .cipher-display .word-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    align-items: center;
-  }
-
-  .cipher-separator {
-    color: var(--gold);
-    font-size: 1.8rem;
-    font-weight: 700;
-    font-family: 'Cinzel', serif;
-    line-height: 40px;
-    margin: 0 8px;
-    user-select: none;
-  }
-
-  .cipher-display canvas {
-    display: inline-block;
-    vertical-align: middle;
-  }
-
-  .cipher-display .space {
-    width: 20px;
-  }
-
-  .placeholder-text {
-    color: var(--text-dim);
-    font-style: italic;
-    font-size: 0.85rem;
-  }
-
-  /* Reference Chart */
-  .reference-toggle {
-    text-align: center;
-    margin-top: 30px;
-  }
-
-  .ref-btn {
-    padding: 10px 28px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-dim);
-    font-family: 'Cinzel', serif;
-    font-size: 0.75rem;
-    letter-spacing: 0.2em;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-
-  .ref-btn:hover {
-    border-color: var(--gold-dim);
-    color: var(--gold);
-  }
-
-  .reference-chart {
-    margin-top: 20px;
-    display: none;
-    animation: fadeIn 0.4s ease;
-  }
-
-  .reference-chart.show { display: block; }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .chart-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 10px;
-    padding: 20px;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-  }
-
-  .chart-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 4px;
-    border-radius: 6px;
-    transition: background 0.2s;
-  }
-
-  .chart-item:hover {
-    background: var(--gold-glow);
-  }
-
-  .chart-letter {
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--gold);
-  }
-
-  /* Copy button */
+  /* ─── ACTION BAR ─── */
   .action-bar {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
   }
 
   .action-btn {
-    padding: 8px 20px;
-    background: transparent;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 10px 8px;
+    background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 5px;
+    border-radius: 8px;
     color: var(--text-dim);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .action-btn:hover, .action-btn:active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+  /* ─── REFERENCE CHART ─── */
+  .reference-toggle { text-align: center; margin-top: 18px; }
+  .ref-btn {
+    padding: 10px 24px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
     cursor: pointer;
     transition: all 0.3s;
   }
+  .ref-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
 
-  .action-btn:hover {
-    border-color: var(--gold);
-    color: var(--gold);
-  }
+  .reference-chart { margin-top: 14px; display: none; animation: fadeIn 0.4s ease; }
+  .reference-chart.show { display: block; }
 
-  /* Decode mode clickable symbols */
-  .decode-input-area {
-    display: none;
-  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  .decode-input-area.show {
-    display: block;
-  }
-
-  .symbol-palette {
+  .chart-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
-    gap: 6px;
-    padding: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+    gap: 8px;
+    padding: 14px;
     background: rgba(0,0,0,0.2);
     border: 1px solid var(--border);
     border-radius: 8px;
-    margin-bottom: 16px;
   }
+  .chart-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 6px; transition: background 0.2s; }
+  .chart-item:hover { background: var(--accent-glow); }
+  .chart-letter { font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.8rem; color: var(--accent); }
 
+  /* ─── DECODE ─── */
+  .symbol-palette {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 5px;
+    padding: 10px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
   .symbol-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 8px 4px;
+    gap: 2px;
+    padding: 6px 2px;
     background: transparent;
     border: 1px solid var(--border);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
   }
-
-  .symbol-btn:hover {
-    border-color: var(--gold);
-    background: var(--gold-glow);
-  }
-
-  .symbol-btn .sym-label {
-    font-size: 0.6rem;
-    color: var(--text-dim);
-    font-family: 'JetBrains Mono', monospace;
-  }
+  .symbol-btn:hover, .symbol-btn:active { border-color: var(--accent); background: var(--accent-glow); }
+  .symbol-btn .sym-label { font-size: 0.55rem; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
 
   .decode-result {
-    min-height: 60px;
+    min-height: 44px;
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 16px;
-    font-size: 1.1rem;
+    padding: 12px;
+    font-size: 1rem;
     letter-spacing: 0.08em;
-    color: var(--gold);
+    color: var(--accent);
     font-family: 'Cinzel', serif;
     word-break: break-word;
   }
 
   .decode-symbols-display {
-    min-height: 80px;
+    min-height: 56px;
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 16px;
+    padding: 12px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 4px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
-  /* Age Gate Overlay */
-  .age-gate {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.5s ease;
-  }
+  /* ─── SETTINGS ─── */
+  .settings-section { display: grid; gap: 18px; }
 
-  .age-gate.hiding {
-    animation: fadeOut 0.5s ease forwards;
-  }
-
-  @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; pointer-events: none; }
-  }
-
-  .age-gate-box {
-    text-align: center;
-    max-width: 400px;
-    padding: 40px;
-  }
-
-  .age-gate-box h2 {
-    font-family: 'Cinzel', serif;
-    font-weight: 900;
-    font-size: 2rem;
-    color: var(--gold);
-    margin-bottom: 8px;
-    letter-spacing: 0.1em;
-  }
-
-  .age-gate-box p {
-    color: var(--text-dim);
-    font-size: 0.85rem;
-    margin-bottom: 28px;
-    line-height: 1.6;
-  }
-
-  .age-input-wrapper {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .age-input {
-    width: 100px;
-    padding: 12px 16px;
+  .setting-group {
     background: var(--surface);
     border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .setting-group-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .setting-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .setting-option {
+    padding: 12px 10px;
+    background: rgba(0,0,0,0.25);
+    border: 2px solid var(--border);
     border-radius: 8px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
     text-align: center;
-    outline: none;
+  }
+  .setting-option:hover { border-color: var(--accent-dim); }
+  .setting-option.selected { border-color: var(--accent); background: var(--accent-glow); }
+  .setting-option-label { font-family: 'Cinzel', serif; font-size: 0.78rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .setting-option-desc { font-size: 0.6rem; color: var(--text-dim); }
+
+  .theme-swatch { display: flex; gap: 3px; justify-content: center; margin-bottom: 6px; }
+  .swatch-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); }
+
+  /* ─── AGE GATE ─── */
+  .age-gate {
+    position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.5s ease;
+  }
+  .age-gate.hiding { animation: fadeOut 0.5s ease forwards; }
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
+
+  .age-gate-box { text-align: center; max-width: 380px; padding: 36px 24px; }
+  .age-gate-box h2 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 2rem; color: var(--accent); margin-bottom: 6px; letter-spacing: 0.1em; }
+  .age-gate-box p { color: var(--text-dim); font-size: 0.82rem; margin-bottom: 24px; line-height: 1.6; }
+
+  .age-input-wrapper { display: flex; gap: 10px; justify-content: center; align-items: center; }
+  .age-input {
+    width: 90px; padding: 12px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; text-align: center; outline: none;
     transition: border-color 0.3s;
   }
-
-  .age-input:focus {
-    border-color: var(--gold);
-  }
+  .age-input:focus { border-color: var(--accent); }
 
   .age-submit {
-    padding: 12px 28px;
-    background: var(--gold);
-    border: none;
-    border-radius: 8px;
-    color: var(--bg);
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    font-size: 0.9rem;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: opacity 0.3s;
+    padding: 12px 24px; background: var(--accent); border: none; border-radius: 8px;
+    color: var(--bg); font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.88rem;
+    letter-spacing: 0.08em; cursor: pointer; transition: opacity 0.3s;
   }
+  .age-submit:hover { opacity: 0.85; }
+  .age-error { color: var(--red); font-size: 0.72rem; margin-top: 12px; min-height: 1.2em; }
 
-  .age-submit:hover {
-    opacity: 0.85;
-  }
-
-  .age-error {
-    color: var(--red);
-    font-size: 0.75rem;
-    margin-top: 14px;
-    min-height: 1.2em;
-  }
-
-  /* Toast Notification */
+  /* ─── TOAST ─── */
   .toast {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
+    position: fixed; bottom: 80px; left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--surface);
-    border: 1px solid var(--gold);
-    border-radius: 10px;
-    padding: 16px 28px;
-    color: var(--text);
-    font-size: 0.85rem;
-    z-index: 10000;
+    background: var(--surface); border: 1px solid var(--accent); border-radius: 10px;
+    padding: 12px 20px; color: var(--text); font-size: 0.78rem;
+    z-index: 10000; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 4px 30px var(--accent-glow);
+    max-width: 88vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+  /* ══════════════════════════════════════════
+     MOBILE RESPONSIVE — THE BIG CHANGES
+     ══════════════════════════════════════════ */
+  @media (max-width: 640px) {
+    .container {
+      padding: 16px 12px 76px;
+    }
+
+    /* Compact header on mobile */
+    .header {
+      margin-bottom: 14px;
+    }
+    .header h1 {
+      font-size: 1.6rem;
+      letter-spacing: 0.1em;
+    }
+    .header .subtitle {
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+    }
+    .theme-badge { font-size: 0.9rem; margin-top: 2px; }
+    .header::after { width: 60px; margin: 8px auto 0; }
+    .header-actions { top: -2px; right: 0; }
+    .icon-btn { width: 34px; height: 34px; border-radius: 8px; }
+    .icon-btn svg { width: 16px; height: 16px; }
+
+    /* Hide top tabs on mobile, show bottom nav */
+    .tab-nav { display: none; }
+
+    .bottom-nav {
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--bottom-nav-h);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      z-index: 999;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 8px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .bottom-nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.25s;
+    }
+    .bottom-nav-btn svg {
+      width: 22px; height: 22px;
+      stroke: var(--text-dim);
+      fill: none;
+      stroke-width: 1.8;
+      transition: stroke 0.25s;
+    }
+    .bottom-nav-btn.active {
+      color: var(--accent);
+    }
+    .bottom-nav-btn.active svg {
+      stroke: var(--accent);
+    }
+
+    /* Tighter mode toggle */
+    .mode-toggle { margin-bottom: 14px; }
+    .mode-btn { padding: 9px 22px; font-size: 0.72rem; }
+
+    /* Compact panels */
+    .workspace { gap: 12px; }
+    .panel { padding: 14px; border-radius: 8px; }
+    .panel-label { font-size: 0.6rem; letter-spacing: 0.2em; margin-bottom: 8px; }
+
+    textarea { min-height: 60px; padding: 10px; font-size: 0.88rem; }
+    .cipher-display { min-height: 60px; padding: 10px; }
+
+    /* Action buttons compact */
+    .action-bar { gap: 5px; margin-top: 8px; }
+    .action-btn { padding: 9px 6px; font-size: 0.6rem; border-radius: 6px; }
+
+    /* Symbol palette compact */
+    .symbol-palette {
+      grid-template-columns: repeat(9, 1fr);
+      gap: 3px;
+      padding: 8px;
+    }
+    .symbol-btn {
+      padding: 5px 1px;
+      border-radius: 5px;
+    }
+    .symbol-btn canvas { width: 28px !important; height: 28px !important; }
+    .symbol-btn .sym-label { font-size: 0.5rem; }
+
+    .decode-symbols-display { min-height: 44px; padding: 10px; }
+    .decode-result { min-height: 36px; padding: 10px; font-size: 0.9rem; }
+
+    /* Reference chart compact */
+    .reference-toggle { margin-top: 12px; }
+    .ref-btn { padding: 8px 18px; font-size: 0.65rem; }
+    .chart-grid {
+      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+      gap: 5px;
+      padding: 10px;
+    }
+    .chart-item { padding: 6px 1px; gap: 3px; }
+    .chart-item canvas { width: 32px !important; height: 32px !important; }
+    .chart-letter { font-size: 0.7rem; }
+
+    /* Settings compact */
+    .setting-group { padding: 14px; }
+    .setting-group-title { font-size: 0.65rem; margin-bottom: 10px; }
+    .setting-options { gap: 6px; }
+    .setting-option { padding: 10px 8px; }
+    .setting-option-label { font-size: 0.72rem; }
+    .setting-option-desc { font-size: 0.55rem; }
+    .swatch-dot { width: 12px; height: 12px; }
+
+    .toast { bottom: 72px; font-size: 0.72rem; padding: 10px 16px; }
+  }
+
+  /* ─── SHARE PICKER MODAL ─── */
+  .share-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 5000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    box-shadow: 0 4px 30px rgba(201, 168, 76, 0.2);
-    max-width: 90vw;
-    text-align: center;
+    transition: opacity 0.25s;
   }
-
-  .toast.show {
+  .share-overlay.open {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
     pointer-events: auto;
   }
 
-  /* Responsive */
-  @media (max-width: 600px) {
-    .header h1 { font-size: 1.8rem; }
-    .container { padding: 24px 14px; }
-    .panel { padding: 18px; }
-    .chart-grid { grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); }
-    .symbol-palette { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
-    .age-gate-box { padding: 24px; }
-    .age-gate-box h2 { font-size: 1.5rem; }
+  .share-sheet {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px 16px 28px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+  .share-overlay.open .share-sheet {
+    transform: translateY(0);
+  }
+
+  .share-sheet-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .share-sheet-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .share-template {
+    padding: 14px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .share-template:hover, .share-template:active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .share-template-emoji {
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+  }
+
+  .share-template-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .share-template-preview {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  @media (min-width: 641px) {
+    .share-sheet {
+      border-radius: 16px;
+      margin-bottom: 40px;
+    }
+  }
+
+  /* Extra small phones */
+  @media (max-width: 380px) {
+    .header h1 { font-size: 1.4rem; }
+    .mode-btn { padding: 8px 16px; font-size: 0.65rem; }
+    .symbol-palette { grid-template-columns: repeat(7, 1fr); }
+    .action-btn { font-size: 0.55rem; padding: 8px 4px; }
   }
 </style>
 </head>
@@ -564,11 +719,11 @@
 <!-- Age Gate -->
 <div class="age-gate" id="age-gate">
   <div class="age-gate-box">
-    <h2>PIGPEN</h2>
-    <p>Please enter your age to proceed</p>
+    <h2>SAMSUNG</h2>
+    <p id="age-gate-text">Please enter your age to proceed</p>
     <div class="age-input-wrapper">
       <input type="number" class="age-input" id="age-input" placeholder="Age" min="1" max="120" autofocus>
-      <button class="age-submit" onclick="submitAge()">Enter</button>
+      <button class="age-submit" onclick="submitAge()" id="age-submit-btn">Enter</button>
     </div>
     <div class="age-error" id="age-error"></div>
   </div>
@@ -577,282 +732,353 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Share Picker Modal -->
+<div class="share-overlay" id="share-overlay" onclick="closeSharePicker(event)">
+  <div class="share-sheet" id="share-sheet">
+    <div class="share-sheet-title" id="share-sheet-title">Pick a vibe</div>
+    <div id="share-templates"></div>
+  </div>
+</div>
+
+<!-- Bottom Nav (mobile) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bottom-nav-btn active" onclick="switchTab('cipher')" id="bnav-cipher">
+    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    <span data-i18n="tabCipher">Home</span>
+  </button>
+  <button class="bottom-nav-btn" onclick="switchTab('settings')" id="bnav-settings">
+    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    <span data-i18n="tabSettings">Settings</span>
+  </button>
+</nav>
+
 <div class="container">
   <div class="header">
-    <h1>PIGPEN</h1>
-    <div class="subtitle">Freemason's Cipher · Encoder & Decoder</div>
-    <button class="chart-copy-btn" onclick="copyChartImage()" title="Copy reference chart">
-      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1"/>
-        <rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/>
-        <rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg>
-      <span class="tooltip">Share / Copy A-Z chart</span>
-    </button>
+    <h1>SAMSUNG</h1>
+    <div class="subtitle" id="header-subtitle">Encoder & Decoder</div>
+    <div class="theme-badge" id="theme-badge"></div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="copyChartImage()" title="Copy reference chart">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
-  <div class="mode-toggle">
-    <button class="mode-btn active" onclick="setMode('encode')">Encode</button>
-    <button class="mode-btn" onclick="setMode('decode')">Decode</button>
+  <!-- Top Tab Nav (desktop only) -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('cipher')" id="tab-cipher" data-i18n="tabCipher">Home</button>
+    <button class="tab-btn" onclick="switchTab('settings')" id="tab-settings" data-i18n="tabSettings">Settings</button>
   </div>
 
-  <div class="workspace">
-    <!-- ENCODE MODE -->
-    <div id="encode-section">
-      <div class="panel">
-        <div class="panel-label">Plaintext</div>
-        <textarea id="encode-input" placeholder="Type your secret message here..." oninput="encode()"></textarea>
-      </div>
-      <div class="panel">
-        <div class="panel-label">Cipher Output</div>
-        <div class="cipher-display" id="encode-output">
-          <span class="placeholder-text">Your encoded message will appear here...</span>
+  <!-- ========== CIPHER TAB ========== -->
+  <div class="tab-content show" id="content-cipher">
+    <div class="mode-toggle">
+      <button class="mode-btn active" onclick="setMode('encode')" id="btn-encode" data-i18n="encode">Encode</button>
+      <button class="mode-btn" onclick="setMode('decode')" id="btn-decode" data-i18n="decode">Decode</button>
+    </div>
+
+    <div class="workspace">
+      <!-- ENCODE -->
+      <div id="encode-section">
+        <div class="panel">
+          <div class="panel-label" data-i18n="plaintext">Plaintext</div>
+          <textarea id="encode-input" data-i18n-placeholder="encodePlaceholder" placeholder="Type your secret message here..." oninput="encode()"></textarea>
         </div>
-        <div class="action-bar">
-          <button class="action-btn" onclick="copyCipher()">Copy Code</button>
-          <button class="action-btn" onclick="copyCipherImage()">Copy Image</button>
-          <button class="action-btn" onclick="shareCipher()">Share</button>
+        <div class="panel">
+          <div class="panel-label" data-i18n="cipherOutput">Output</div>
+          <div class="cipher-display" id="encode-output">
+            <span class="placeholder-text" data-i18n="encodedPlaceholder">Your encoded message will appear here...</span>
+          </div>
+          <div class="action-bar">
+            <button class="action-btn" onclick="copyCipher()" data-i18n="copyCode">Copy Code</button>
+            <button class="action-btn" onclick="copyCipherImage()" data-i18n="copyImage">Copy Image</button>
+            <button class="action-btn" onclick="shareCipher()" data-i18n="share">Share Image</button>
+            <button class="action-btn" onclick="shareCode()" data-i18n="shareCode">Share Code</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DECODE -->
+      <div id="decode-section" style="display:none;">
+        <div class="panel">
+          <div class="panel-label" data-i18n="pasteCode">Paste a copied code</div>
+          <textarea id="paste-decode-input" data-i18n-placeholder="decodePastePlaceholder" placeholder="Paste a code like 8.5.12.12.15 , 23.15.18.12.4 ..." oninput="decodeFromPaste()"></textarea>
+          <div class="panel-label" style="margin-top:10px;" data-i18n="decodedMessage">Decoded Message</div>
+          <div class="decode-result" id="paste-decode-result">
+            <span class="placeholder-text" data-i18n="decodePastePlaceholder2">Paste a code above to reveal the message...</span>
+          </div>
+        </div>
+
+        <!-- Tap symbols — collapsible -->
+        <div class="panel">
+          <div class="panel-header" onclick="togglePanel('manual-decode')">
+            <div class="panel-label" data-i18n="tapSymbols">Or tap symbols manually</div>
+            <div class="panel-toggle" id="toggle-manual-decode">&#9660;</div>
+          </div>
+          <div class="panel-body" id="body-manual-decode">
+            <div class="symbol-palette" id="symbol-palette"></div>
+            <div class="panel-label" style="margin-top:8px;" data-i18n="yourCipher">Your Message</div>
+            <div class="decode-symbols-display" id="decode-symbols"></div>
+            <div class="action-bar">
+              <button class="action-btn" onclick="decodeBackspace()" data-i18n="backspace">&larr; Back</button>
+              <button class="action-btn" onclick="decodeAddSpace()" data-i18n="addSpace">, Space</button>
+              <button class="action-btn" onclick="decodeClear()" data-i18n="clear">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label" data-i18n="decodedPlaintext">Decoded Plaintext</div>
+          <div class="decode-result" id="decode-result">
+            <span class="placeholder-text" data-i18n="decodeClickPlaceholder">Tap symbols above to reveal the hidden message...</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- DECODE MODE -->
-    <div id="decode-section" style="display:none;">
-      <div class="panel">
-        <div class="panel-label">Paste a copied cipher code</div>
-        <textarea id="paste-decode-input" placeholder="Paste a code like 8.5.12.12.15 , 23.15.18.12.4 ..." oninput="decodeFromPaste()"></textarea>
-        <div class="panel-label" style="margin-top:16px;">Cipher Symbols</div>
-        <div class="decode-symbols-display" id="paste-decode-symbols"></div>
-        <div class="panel-label" style="margin-top:12px;">Decoded Message</div>
-        <div class="decode-result" id="paste-decode-result">
-          <span class="placeholder-text">Paste a cipher code above to reveal the message...</span>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-label">Or tap symbols manually</div>
-        <div class="symbol-palette" id="symbol-palette"></div>
-        <div class="panel-label" style="margin-top:12px;">Your Cipher Message</div>
-        <div class="decode-symbols-display" id="decode-symbols"></div>
-        <div class="action-bar">
-          <button class="action-btn" onclick="decodeBackspace()">← Backspace</button>
-          <button class="action-btn" onclick="decodeAddSpace()">, Add Space</button>
-          <button class="action-btn" onclick="decodeClear()">Clear</button>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-label">Decoded Plaintext</div>
-        <div class="decode-result" id="decode-result">
-          <span class="placeholder-text">Tap symbols above to reveal the hidden message...</span>
-        </div>
-      </div>
+    <div class="reference-toggle">
+      <button class="ref-btn" onclick="toggleReference()" data-i18n="refChart">&oplus; Reference Chart</button>
+    </div>
+    <div class="reference-chart" id="reference-chart">
+      <div class="chart-grid" id="chart-grid"></div>
     </div>
   </div>
 
-  <!-- REFERENCE -->
-  <div class="reference-toggle">
-    <button class="ref-btn" onclick="toggleReference()">⊞ Reference Chart</button>
-  </div>
-  <div class="reference-chart" id="reference-chart">
-    <div class="chart-grid" id="chart-grid"></div>
+  <!-- ========== SETTINGS TAB ========== -->
+  <div class="tab-content" id="content-settings">
+    <div class="settings-section">
+      <div class="setting-group">
+        <div class="setting-group-title" data-i18n="langTitle">Language</div>
+        <div class="setting-options">
+          <div class="setting-option selected" onclick="setLanguage('en')" id="lang-en">
+            <div class="setting-option-label">English</div>
+            <div class="setting-option-desc">Default</div>
+          </div>
+          <div class="setting-option" onclick="setLanguage('mr')" id="lang-mr">
+            <div class="setting-option-label">Marwadi</div>
+            <div class="setting-option-desc">&#2350;&#2366;&#2352;&#2357;&#2366;&#2337;&#2368;</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-group-title" data-i18n="themeTitle">Theme</div>
+        <div class="setting-options">
+          <div class="setting-option selected" onclick="setTheme('default')" id="theme-default">
+            <div class="theme-swatch">
+              <div class="swatch-dot" style="background:#c9a84c;"></div>
+              <div class="swatch-dot" style="background:#0a0a0f;"></div>
+            </div>
+            <div class="setting-option-label" data-i18n="themeGold">Gold</div>
+          </div>
+          <div class="setting-option" onclick="setTheme('orange')" id="theme-orange">
+            <div class="theme-swatch">
+              <div class="swatch-dot" style="background:#ff8c00;"></div>
+              <div class="swatch-dot" style="background:#1a0f05;"></div>
+            </div>
+            <div class="setting-option-label">&#127818;&#129505; Orange</div>
+          </div>
+          <div class="setting-option" onclick="setTheme('red')" id="theme-red">
+            <div class="theme-swatch">
+              <div class="swatch-dot" style="background:#e04040;"></div>
+              <div class="swatch-dot" style="background:#120808;"></div>
+            </div>
+            <div class="setting-option-label" data-i18n="themeRed">Red</div>
+          </div>
+          <div class="setting-option" onclick="setTheme('black')" id="theme-black">
+            <div class="theme-swatch">
+              <div class="swatch-dot" style="background:#888888;"></div>
+              <div class="swatch-dot" style="background:#000000;"></div>
+            </div>
+            <div class="setting-option-label" data-i18n="themeBlack">Black</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-// ─── PIGPEN CIPHER DEFINITIONS ───
-// Each letter maps to drawing instructions
-// type: 'grid' or 'x'
-// lines: array of line segments [x1,y1,x2,y2] in a 40x40 cell
-// dot: boolean
+// ─── i18n ───
+const i18n = {
+  en: {
+    tabCipher:'Home', tabSettings:'Settings', encode:'Encode', decode:'Decode',
+    plaintext:'Plaintext', encodePlaceholder:'Type your secret message here...',
+    cipherOutput:'Output', encodedPlaceholder:'Your encoded message will appear here...',
+    copyCode:'Copy Code', copyImage:'Copy Image', share:'Share Image', shareCode:'Share Code',
+    pasteCode:'Paste a copied code',
+    decodePastePlaceholder:'Paste a code like 8.5.12.12.15 , 23.15.18.12.4 ...',
+    cipherSymbols:'Symbols', decodedMessage:'Decoded Message',
+    decodePastePlaceholder2:'Paste a code above to reveal the message...',
+    tapSymbols:'Or tap symbols manually', yourCipher:'Your Message',
+    backspace:'\u2190 Back', addSpace:', Space', clear:'Clear',
+    decodedPlaintext:'Decoded Plaintext',
+    decodeClickPlaceholder:'Tap symbols above to reveal the hidden message...',
+    refChart:'\u2295 Reference Chart',
+    langTitle:'Language', themeTitle:'Theme',
+    themeGold:'Gold', themeRed:'Red', themeBlack:'Black',
+    subtitle:"Encoder & Decoder",
+    ageText:'Please enter your age to proceed', ageBtn:'Enter',
+    ageError:'Please enter a valid age.',
+    toastCopied:'Copied \u2014 paste it anywhere!',
+    toastImageCopied:'Image copied!',
+    toastChartCopied:'Chart copied!',
+    toastShareFail:'Share not supported \u2014 use Copy instead.',
+    toastCodeShared:'Code shared!',
+  },
+  mr: {
+    tabCipher:'\u0918\u0930', tabSettings:'\u0938\u0947\u091f\u093f\u0902\u0917\u094d\u0938',
+    encode:'\u090f\u0928\u094d\u0915\u094b\u0921', decode:'\u0921\u093f\u0915\u094b\u0921',
+    plaintext:'\u0938\u093e\u0926\u094b \u0932\u093f\u0916\u094b',
+    encodePlaceholder:'\u092f\u093e\u0902 \u0924\u0941\u0902\u0939\u093e\u0930\u094b \u0917\u0941\u092a\u0924 \u0938\u0902\u0926\u0947\u0936 \u0932\u093f\u0916\u094b...',
+    cipherOutput:'\u0928\u0924\u0940\u091c\u094b',
+    encodedPlaceholder:'\u0924\u0941\u0902\u0939\u093e\u0930\u094b \u0938\u0902\u0926\u0947\u0936 \u092f\u093e\u0902 \u0926\u093f\u0916\u0938\u0940...',
+    copyCode:'\u0915\u094b\u0921 \u0915\u0949\u092a\u0940', copyImage:'\u091b\u092c\u0940 \u0915\u0949\u092a\u0940',
+    share:'\u091b\u092c\u0940 \u092d\u0947\u091c\u094b', shareCode:'\u0915\u094b\u0921 \u092d\u0947\u091c\u094b',
+    pasteCode:'\u0915\u094b\u0921 \u092f\u093e\u0902 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u094b',
+    decodePastePlaceholder:'\u0915\u094b\u0921 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u094b \u091c\u0948\u0938\u094b 8.5.12.12.15 , 23.15.18.12.4 ...',
+    decodedMessage:'\u0921\u093f\u0915\u094b\u0921 \u0938\u0902\u0926\u0947\u0936',
+    decodePastePlaceholder2:'\u0938\u0902\u0926\u0947\u0936 \u0926\u0947\u0916\u0923 \u0915\u0947 \u0932\u093f\u090f \u0915\u094b\u0921 \u092a\u0947\u0938\u094d\u091f \u0915\u0930\u094b...',
+    tapSymbols:'\u092f\u093e \u091a\u093f\u0928\u094d\u0939 \u0926\u092c\u093e\u0913',
+    yourCipher:'\u0924\u0941\u0902\u0939\u093e\u0930\u094b \u0938\u0902\u0926\u0947\u0936',
+    backspace:'\u2190 \u092a\u093f\u091b\u0947', addSpace:', \u0916\u093e\u0932\u0940', clear:'\u0938\u093e\u092b',
+    decodedPlaintext:'\u0921\u093f\u0915\u094b\u0921 \u0932\u093f\u0916\u094b',
+    decodeClickPlaceholder:'\u0938\u0902\u0926\u0947\u0936 \u0926\u0947\u0916\u0923 \u0915\u0947 \u0932\u093f\u090f \u091a\u093f\u0928\u094d\u0939 \u0926\u092c\u093e\u0913...',
+    refChart:'\u2295 \u0938\u0902\u0926\u0930\u094d\u092d \u091a\u093e\u0930\u094d\u091f',
+    langTitle:'\u092d\u093e\u0937\u093e', themeTitle:'\u0925\u0940\u092e',
+    themeGold:'\u0938\u094b\u0928\u094b', themeRed:'\u0932\u093e\u0932', themeBlack:'\u0915\u093e\u0932\u094b',
+    subtitle:'\u090f\u0928\u094d\u0915\u094b\u0921 & \u0921\u093f\u0915\u094b\u0921',
+    ageText:'\u0906\u0917\u0947 \u092c\u0922\u0923 \u0915\u0947 \u0932\u093f\u090f \u0905\u092a\u0923\u0940 \u0909\u092e\u094d\u0930 \u0926\u0930\u094d\u091c \u0915\u0930\u094b',
+    ageBtn:'\u0906\u0913',
+    ageError:'\u0938\u0939\u0940 \u0909\u092e\u094d\u0930 \u0926\u0930\u094d\u091c \u0915\u0930\u094b\u0964',
+    toastCopied:'\u0915\u0949\u092a\u0940 \u0939\u094b\u0917\u094d\u092f\u094b!',
+    toastImageCopied:'\u091b\u092c\u0940 \u0915\u0949\u092a\u0940!',
+    toastChartCopied:'\u091a\u093e\u0930\u094d\u091f \u0915\u0949\u092a\u0940!',
+    toastShareFail:'\u0936\u0947\u092f\u0930 \u0928\u0939\u0940\u0902 \u2014 \u0915\u0949\u092a\u0940 \u0915\u0930\u094b\u0964',
+    toastCodeShared:'\u0915\u094b\u0921 \u092d\u0947\u091c\u093f\u092f\u094b!',
+  }
+};
 
-const S = 40; // cell size
-const P = 6;  // padding
-const LW = 2.5;
+let currentLang = localStorage.getItem('samsung_lang') || 'en';
+let currentTheme = localStorage.getItem('samsung_theme') || 'default';
 
-const cipherMap = {}; // unused
+function t(key) { return (i18n[currentLang] && i18n[currentLang][key]) || i18n['en'][key] || key; }
 
-// Standard Pigpen cipher symbol definitions
-// Each cell in the 3x3 grid uses the GRID LINES that form its borders
-// Coordinate system: (0,0) top-left of cell, S=40 cell size, P=6 padding
-// Lines are [x1,y1, x2,y2]
-//
-// The tic-tac-toe grid:
-//   AB | CD | EF
-//   ---+----+---
-//   GH | IJ | KL
-//   ---+----+---
-//   MN | OP | QR
-//
-// Each cell's symbol = the grid lines touching that cell
-// Top-left (A/B):     right border, bottom border         → ┘
-// Top-center (C/D):   left border, right border, bottom   → └┘ (U shape)
-// Top-right (E/F):    left border, bottom border          → └
-// Mid-left (G/H):     right border, top border            → ┐  
-// Mid-center (I/J):   left, right, top                    → ┌┐ (∩ shape)
-// Mid-right (K/L):    left border, top border             → ┌
-// Bot-left (M/N):     right border, top border, bottom    → ┐ with bottom line
-// Bot-center (O/P):   all 4 borders                       → □ box
-// Bot-right (Q/R):    left border, top border, bottom     → ┌ with bottom line
+function applyLanguage() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t(key)) el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t(key)) el.placeholder = t(key);
+  });
+  document.getElementById('header-subtitle').textContent = t('subtitle');
+  document.querySelectorAll('#lang-en, #lang-mr').forEach(el => el.classList.remove('selected'));
+  const langEl = document.getElementById('lang-' + currentLang);
+  if (langEl) langEl.classList.add('selected');
+  localStorage.setItem('samsung_lang', currentLang);
+}
 
+function setLanguage(lang) { currentLang = lang; applyLanguage(); }
+
+// ─── THEMES ───
+const themeBadges = { 'default':'', 'orange':'\ud83c\udf4a\ud83e\udde1', 'red':'\u2764\ufe0f\u200d\ud83d\udd25', 'black':'\ud83d\udda4' };
+
+function setTheme(theme) {
+  currentTheme = theme;
+  if (theme === 'default') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-badge').textContent = themeBadges[theme] || '';
+  ['default','orange','red','black'].forEach(t => {
+    const el = document.getElementById('theme-' + t);
+    if (el) el.classList.toggle('selected', t === theme);
+  });
+  localStorage.setItem('samsung_theme', currentTheme);
+  buildSymbolPalette(); buildReferenceChart(); encode();
+}
+
+function getAccentColor() { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#c9a84c'; }
+
+// ─── TAB SWITCHING ───
+function switchTab(tab) {
+  // Top tabs
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('show'));
+  const topBtn = document.getElementById('tab-' + tab);
+  if (topBtn) topBtn.classList.add('active');
+  document.getElementById('content-' + tab).classList.add('show');
+  // Bottom nav
+  document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
+  const bnavBtn = document.getElementById('bnav-' + tab);
+  if (bnavBtn) bnavBtn.classList.add('active');
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── COLLAPSIBLE PANELS ───
+function togglePanel(id) {
+  const body = document.getElementById('body-' + id);
+  const toggle = document.getElementById('toggle-' + id);
+  body.classList.toggle('collapsed');
+  toggle.classList.toggle('rotated');
+}
+
+// ─── SAMSUNG ───
+const S = 40, P = 6, LW = 2.5;
 const letterDefs = {};
 
-// G = ┐ → bottom-right corner (right wall + bottom wall) - WAIT that's same as A
-// Actually, looking at the user's handwriting:
-// Row 1 (top cells): walls from the grid line BELOW → bottom + sides
-// Row 2 (middle cells): walls from the grid line ABOVE → top + sides  
-// Row 3 (bottom cells): walls from BOTH grid lines → top + bottom + sides
-//
-// NO - let me just match the user's handwriting directly.
-// "HEY RAGHU":
-// H(•┐) E(└) Y(>) R(└•) A(┘) G(┐) H(•┐) U(>)
-// 
-// From handwriting image, H looks like dot + lines on RIGHT and BOTTOM
-// That means G/H = right+bottom (same shape as A/B but... that can't be right)
-//
-// WAIT - I think the correct standard Pigpen is:
-// Row 1: bottom only as the horizontal line
-// Row 2: top AND bottom horizontal lines  
-// Row 3: top only as the horizontal line
-//
-// So:
-// A(top-left):    right + bottom        = ┘
-// C(top-mid):     left + right + bottom  = └┘
-// E(top-right):   left + bottom          = └
-// G(mid-left):    right + top + bottom   = ┐ with bottom line (3-sided open left)
-// I(mid-mid):     all 4 sides            = □ box
-// K(mid-right):   left + top + bottom    = ┌ with bottom line (3-sided open right)
-// M(bot-left):    right + top            = ┐
-// O(bot-mid):     left + right + top     = ┌┐
-// Q(bot-right):   left + top             = ┌
-
-// A = ┘ → right + bottom
-letterDefs['A'] = { lines: [
-  [S-P, P, S-P, S-P],   // right wall
-  [P, S-P, S-P, S-P]    // bottom wall
-], dot: false };
+letterDefs['A'] = { lines: [[S-P,P, S-P,S-P], [P,S-P, S-P,S-P]], dot: false };
 letterDefs['B'] = { lines: [...letterDefs['A'].lines], dot: true };
-
-// C = └┘ → left + right + bottom (U open top)
-letterDefs['C'] = { lines: [
-  [P, P, P, S-P],
-  [S-P, P, S-P, S-P],
-  [P, S-P, S-P, S-P]
-], dot: false };
+letterDefs['C'] = { lines: [[P,P, P,S-P], [S-P,P, S-P,S-P], [P,S-P, S-P,S-P]], dot: false };
 letterDefs['D'] = { lines: [...letterDefs['C'].lines], dot: true };
-
-// E = └ → left + bottom
-letterDefs['E'] = { lines: [
-  [P, P, P, S-P],
-  [P, S-P, S-P, S-P]
-], dot: false };
+letterDefs['E'] = { lines: [[P,P, P,S-P], [P,S-P, S-P,S-P]], dot: false };
 letterDefs['F'] = { lines: [...letterDefs['E'].lines], dot: true };
-
-// G = 3-sided open left (right + top + bottom)
-letterDefs['G'] = { lines: [
-  [S-P, P, S-P, S-P],   // right wall
-  [P, P, S-P, P],       // top wall
-  [P, S-P, S-P, S-P]    // bottom wall
-], dot: false };
+letterDefs['G'] = { lines: [[S-P,P, S-P,S-P], [P,P, S-P,P], [P,S-P, S-P,S-P]], dot: false };
 letterDefs['H'] = { lines: [...letterDefs['G'].lines], dot: true };
-
-// I = □ full box (all 4 walls)
-letterDefs['I'] = { lines: [
-  [P, P, P, S-P],
-  [S-P, P, S-P, S-P],
-  [P, P, S-P, P],
-  [P, S-P, S-P, S-P]
-], dot: false };
+letterDefs['I'] = { lines: [[P,P, P,S-P], [S-P,P, S-P,S-P], [P,P, S-P,P], [P,S-P, S-P,S-P]], dot: false };
 letterDefs['J'] = { lines: [...letterDefs['I'].lines], dot: true };
-
-// K = 3-sided open right (left + top + bottom)
-letterDefs['K'] = { lines: [
-  [P, P, P, S-P],       // left wall
-  [P, P, S-P, P],       // top wall
-  [P, S-P, S-P, S-P]    // bottom wall
-], dot: false };
+letterDefs['K'] = { lines: [[P,P, P,S-P], [P,P, S-P,P], [P,S-P, S-P,S-P]], dot: false };
 letterDefs['L'] = { lines: [...letterDefs['K'].lines], dot: true };
-
-// M = ┐ → right + top
-letterDefs['M'] = { lines: [
-  [S-P, P, S-P, S-P],   // right wall
-  [P, P, S-P, P]        // top wall
-], dot: false };
+letterDefs['M'] = { lines: [[S-P,P, S-P,S-P], [P,P, S-P,P]], dot: false };
 letterDefs['N'] = { lines: [...letterDefs['M'].lines], dot: true };
-
-// O = ┌┐ → left + right + top (∩ open bottom)
-letterDefs['O'] = { lines: [
-  [P, P, P, S-P],
-  [S-P, P, S-P, S-P],
-  [P, P, S-P, P]
-], dot: false };
+letterDefs['O'] = { lines: [[P,P, P,S-P], [S-P,P, S-P,S-P], [P,P, S-P,P]], dot: false };
 letterDefs['P'] = { lines: [...letterDefs['O'].lines], dot: true };
-
-// Q = ┌ → left + top
-letterDefs['Q'] = { lines: [
-  [P, P, P, S-P],       // left wall
-  [P, P, S-P, P]        // top wall
-], dot: false };
+letterDefs['Q'] = { lines: [[P,P, P,S-P], [P,P, S-P,P]], dot: false };
 letterDefs['R'] = { lines: [...letterDefs['Q'].lines], dot: true };
-
-// ─── X-GRID: S T U V W X Y Z ───
-// S = ∨ (bottom wedge - open top)
-letterDefs['S'] = { lines: [
-  [P, P, S/2, S-P],
-  [S-P, P, S/2, S-P]
-], dot: false, type: 'x' };
+letterDefs['S'] = { lines: [[P,P, S/2,S-P], [S-P,P, S/2,S-P]], dot: false, type: 'x' };
 letterDefs['T'] = { lines: [...letterDefs['S'].lines], dot: true, type: 'x' };
-
-// U = < (left wedge - open right) — opposite of Y
-letterDefs['U'] = { lines: [
-  [S-P, P, P, S/2],
-  [P, S/2, S-P, S-P]
-], dot: false, type: 'x' };
+letterDefs['U'] = { lines: [[S-P,P, P,S/2], [P,S/2, S-P,S-P]], dot: false, type: 'x' };
 letterDefs['V'] = { lines: [...letterDefs['U'].lines], dot: true, type: 'x' };
-
-// W = ∧ (top wedge - open bottom) — opposite of S
-letterDefs['W'] = { lines: [
-  [S/2, P, P, S-P],
-  [S/2, P, S-P, S-P]
-], dot: false, type: 'x' };
+letterDefs['W'] = { lines: [[S/2,P, P,S-P], [S/2,P, S-P,S-P]], dot: false, type: 'x' };
 letterDefs['X'] = { lines: [...letterDefs['W'].lines], dot: true, type: 'x' };
-
-// Y = > (right wedge - open left) — opposite of U
-letterDefs['Y'] = { lines: [
-  [P, P, S-P, S/2],
-  [S-P, S/2, P, S-P]
-], dot: false, type: 'x' };
+letterDefs['Y'] = { lines: [[P,P, S-P,S/2], [S-P,S/2, P,S-P]], dot: false, type: 'x' };
 letterDefs['Z'] = { lines: [...letterDefs['Y'].lines], dot: true, type: 'x' };
 
-// ─── DRAWING ───
 function drawSymbol(letter, size = 40) {
   const canvas = document.createElement('canvas');
   const scale = size / 40;
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
-  
   const def = letterDefs[letter.toUpperCase()];
   if (!def) return null;
-
-  ctx.strokeStyle = '#c9a84c';
-  ctx.lineWidth = LW * scale;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  def.lines.forEach(([x1, y1, x2, y2]) => {
-    ctx.beginPath();
-    ctx.moveTo(x1 * scale, y1 * scale);
-    ctx.lineTo(x2 * scale, y2 * scale);
-    ctx.stroke();
-  });
-
-  if (def.dot) {
-    ctx.fillStyle = '#c9a84c';
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, 3 * scale, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
+  const color = getAccentColor();
+  ctx.strokeStyle = color; ctx.lineWidth = LW * scale; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  def.lines.forEach(([x1,y1,x2,y2]) => { ctx.beginPath(); ctx.moveTo(x1*scale,y1*scale); ctx.lineTo(x2*scale,y2*scale); ctx.stroke(); });
+  if (def.dot) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(size/2,size/2,3*scale,0,Math.PI*2); ctx.fill(); }
   return canvas;
 }
 
@@ -861,34 +1087,13 @@ function encode() {
   const input = document.getElementById('encode-input').value;
   const output = document.getElementById('encode-output');
   output.innerHTML = '';
-
-  if (!input.trim()) {
-    output.innerHTML = '<span class="placeholder-text">Your encoded message will appear here...</span>';
-    return;
-  }
-
+  if (!input.trim()) { output.innerHTML = '<span class="placeholder-text">'+t('encodedPlaceholder')+'</span>'; return; }
   const words = input.split(/\s+/);
   words.forEach((word, wi) => {
-    const group = document.createElement('span');
-    group.className = 'word-group';
-    
-    for (const char of word) {
-      const upper = char.toUpperCase();
-      if (letterDefs[upper]) {
-        const canvas = drawSymbol(upper, 40);
-        if (canvas) group.appendChild(canvas);
-      }
-    }
-    
+    const group = document.createElement('span'); group.className = 'word-group';
+    for (const char of word) { const upper = char.toUpperCase(); if (letterDefs[upper]) { const c = drawSymbol(upper,40); if (c) group.appendChild(c); } }
     output.appendChild(group);
-
-    // Add comma separator between words
-    if (wi < words.length - 1) {
-      const comma = document.createElement('span');
-      comma.className = 'cipher-separator';
-      comma.textContent = ',';
-      output.appendChild(comma);
-    }
+    if (wi < words.length-1) { const comma = document.createElement('span'); comma.className='cipher-separator'; comma.textContent=','; output.appendChild(comma); }
   });
 }
 
@@ -896,26 +1101,13 @@ function encode() {
 let decodeLetters = [];
 
 function buildSymbolPalette() {
-  const palette = document.getElementById('symbol-palette');
-  palette.innerHTML = '';
-  
+  const palette = document.getElementById('symbol-palette'); palette.innerHTML = '';
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
-    const btn = document.createElement('button');
-    btn.className = 'symbol-btn';
-    
-    const canvas = drawSymbol(letter, 36);
-    if (canvas) btn.appendChild(canvas);
-    
-    const label = document.createElement('span');
-    label.className = 'sym-label';
-    label.textContent = letter;
+    const btn = document.createElement('button'); btn.className = 'symbol-btn';
+    const canvas = drawSymbol(letter, 32); if (canvas) btn.appendChild(canvas);
+    const label = document.createElement('span'); label.className = 'sym-label'; label.textContent = letter;
     btn.appendChild(label);
-    
-    btn.onclick = () => {
-      decodeLetters.push(letter);
-      updateDecodeDisplay();
-    };
-    
+    btn.onclick = () => { decodeLetters.push(letter); updateDecodeDisplay(); };
     palette.appendChild(btn);
   });
 }
@@ -924,375 +1116,239 @@ function updateDecodeDisplay() {
   const symbolsDiv = document.getElementById('decode-symbols');
   const resultDiv = document.getElementById('decode-result');
   symbolsDiv.innerHTML = '';
-  
   decodeLetters.forEach(item => {
-    if (item === ' ') {
-      const spacer = document.createElement('span');
-      spacer.style.width = '20px';
-      spacer.style.display = 'inline-block';
-      symbolsDiv.appendChild(spacer);
-    } else {
-      const canvas = drawSymbol(item, 36);
-      if (canvas) symbolsDiv.appendChild(canvas);
-    }
+    if (item === ' ') { const s = document.createElement('span'); s.style.width='16px'; s.style.display='inline-block'; symbolsDiv.appendChild(s); }
+    else { const c = drawSymbol(item,32); if (c) symbolsDiv.appendChild(c); }
   });
-
   const text = decodeLetters.join('');
-  if (text) {
-    resultDiv.innerHTML = '';
-    resultDiv.textContent = text;
-  } else {
-    resultDiv.innerHTML = '<span class="placeholder-text">Click symbols above to decode...</span>';
-  }
+  if (text) { resultDiv.innerHTML = ''; resultDiv.textContent = text; }
+  else { resultDiv.innerHTML = '<span class="placeholder-text">'+t('decodeClickPlaceholder')+'</span>'; }
 }
 
-function decodeBackspace() {
-  decodeLetters.pop();
-  updateDecodeDisplay();
-}
+function decodeBackspace() { decodeLetters.pop(); updateDecodeDisplay(); }
+function decodeAddSpace() { decodeLetters.push(' '); updateDecodeDisplay(); }
+function decodeClear() { decodeLetters = []; updateDecodeDisplay(); }
 
-function decodeAddSpace() {
-  decodeLetters.push(' ');
-  updateDecodeDisplay();
-}
-
-function decodeClear() {
-  decodeLetters = [];
-  updateDecodeDisplay();
-}
-
-// ─── MODE TOGGLE ───
 function setMode(mode) {
-  document.querySelectorAll('.mode-btn').forEach((btn, i) => {
-    btn.classList.toggle('active', (mode === 'encode' && i === 0) || (mode === 'decode' && i === 1));
-  });
-  document.getElementById('encode-section').style.display = mode === 'encode' ? 'block' : 'none';
-  document.getElementById('decode-section').style.display = mode === 'decode' ? 'block' : 'none';
+  document.querySelectorAll('.mode-btn').forEach((btn,i) => { btn.classList.toggle('active', (mode==='encode'&&i===0)||(mode==='decode'&&i===1)); });
+  document.getElementById('encode-section').style.display = mode==='encode' ? 'block' : 'none';
+  document.getElementById('decode-section').style.display = mode==='decode' ? 'block' : 'none';
 }
 
-// ─── REFERENCE CHART ───
-function toggleReference() {
-  document.getElementById('reference-chart').classList.toggle('show');
-}
+function toggleReference() { document.getElementById('reference-chart').classList.toggle('show'); }
 
 function buildReferenceChart() {
-  const grid = document.getElementById('chart-grid');
-  grid.innerHTML = '';
-  
+  const grid = document.getElementById('chart-grid'); grid.innerHTML = '';
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
-    const item = document.createElement('div');
-    item.className = 'chart-item';
-    
-    const canvas = drawSymbol(letter, 40);
-    if (canvas) item.appendChild(canvas);
-    
-    const label = document.createElement('div');
-    label.className = 'chart-letter';
-    label.textContent = letter;
-    item.appendChild(label);
-    
-    grid.appendChild(item);
+    const item = document.createElement('div'); item.className = 'chart-item';
+    const canvas = drawSymbol(letter,36); if (canvas) item.appendChild(canvas);
+    const label = document.createElement('div'); label.className = 'chart-letter'; label.textContent = letter;
+    item.appendChild(label); grid.appendChild(item);
   });
 }
 
-// ─── COPY IMAGE ───
-function copyCipherImage() {
-  const output = document.getElementById('encode-output');
-  const canvases = output.querySelectorAll('canvas');
-  if (canvases.length === 0) return;
-
-  const input = document.getElementById('encode-input').value;
-  const words = input.split(/\s+/);
-
-  const cellSize = 50;
-  const wordGap = 30;
-  const padding = 40;
-
-  let totalWidth = padding * 2;
-  words.forEach((word, i) => {
-    const letterCount = word.replace(/[^a-zA-Z]/g, '').length;
-    totalWidth += letterCount * cellSize;
-    if (i < words.length - 1) totalWidth += wordGap;
-  });
-
-  const exportCanvas = document.createElement('canvas');
-  exportCanvas.width = totalWidth;
-  exportCanvas.height = cellSize + padding * 2;
-  const ctx = exportCanvas.getContext('2d');
-
-  ctx.fillStyle = '#0a0a0f';
-  ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-
-  let x = padding;
-  words.forEach((word, wi) => {
-    for (const char of word) {
-      const upper = char.toUpperCase();
-      if (letterDefs[upper]) {
-        const symCanvas = drawSymbol(upper, cellSize);
-        if (symCanvas) {
-          ctx.drawImage(symCanvas, x, padding);
-          x += cellSize;
-        }
-      }
-    }
-    if (wi < words.length - 1) x += wordGap;
-  });
-
-  exportCanvas.toBlob(blob => {
-    const item = new ClipboardItem({ 'image/png': blob });
-    navigator.clipboard.write([item]).then(() => {
-      showToast('\u{1F34A} Image copied \u2014 you can paste it anywhere you like!');
-    }).catch(() => {
-      showToast('Could not copy image to clipboard.');
-    });
-  });
-}
-
-// ─── AGE GATE ───
-function checkAgeGate() {
-  const gate = document.getElementById('age-gate');
-  if (localStorage.getItem('pigpen_age_verified')) {
-    gate.remove();
-  }
-}
-
-function submitAge() {
-  const input = document.getElementById('age-input');
-  const error = document.getElementById('age-error');
-  const age = parseInt(input.value, 10);
-
-  if (!age || age < 1 || age > 120) {
-    error.textContent = 'Please enter a valid age.';
-    return;
-  }
-
-  localStorage.setItem('pigpen_age_verified', age);
-  const gate = document.getElementById('age-gate');
-  gate.classList.add('hiding');
-  setTimeout(() => gate.remove(), 500);
-}
-
-document.getElementById('age-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') submitAge();
-});
-
-checkAgeGate();
-
-// ─── COPY TO CLIPBOARD (as text codes) ───
-function copyCipher() {
+// ─── CODE HELPERS ───
+function getCipherCode() {
   const input = document.getElementById('encode-input').value.trim();
-  if (!input) return;
-
-  const words = input.split(/\s+/);
-  const coded = words.map(word => {
+  if (!input) return '';
+  return input.split(/\s+/).map(word => {
     const nums = [];
-    for (const char of word) {
-      const upper = char.toUpperCase();
-      const code = upper.charCodeAt(0) - 64; // A=1, B=2, ... Z=26
-      if (code >= 1 && code <= 26) nums.push(code);
-    }
+    for (const char of word) { const c = char.toUpperCase().charCodeAt(0)-64; if (c>=1&&c<=26) nums.push(c); }
     return nums.join('.');
   }).join(' , ');
+}
 
-  navigator.clipboard.writeText(coded).then(() => {
-    showToast('\u{1F34A} The text is copied \u2014 you can paste it anywhere you like!');
-  }).catch(() => {
-    showToast('Could not copy to clipboard.');
+function copyCipher() {
+  const coded = getCipherCode(); if (!coded) return;
+  navigator.clipboard.writeText(coded).then(() => showToast(t('toastCopied'))).catch(() => showToast('Could not copy.'));
+}
+
+function copyCipherImage() {
+  if (document.getElementById('encode-output').querySelectorAll('canvas').length===0) return;
+  buildCipherImageBlob(b => {
+    const item = new ClipboardItem({'image/png':b});
+    navigator.clipboard.write([item]).then(() => showToast(t('toastImageCopied'))).catch(() => showToast('Could not copy.'));
   });
 }
 
-// ─── DECODE FROM PASTED CODE ───
-function decodeFromPaste() {
-  const input = document.getElementById('paste-decode-input').value.trim();
-  const symbolsDiv = document.getElementById('paste-decode-symbols');
-  const resultDiv = document.getElementById('paste-decode-result');
-  symbolsDiv.innerHTML = '';
+function buildCipherImageBlob(callback) {
+  const input = document.getElementById('encode-input').value;
+  const words = input.split(/\s+/);
+  const cellSize=50, wordGap=30, padding=40;
+  let totalWidth = padding*2;
+  words.forEach((word,i) => { totalWidth += word.replace(/[^a-zA-Z]/g,'').length*cellSize; if(i<words.length-1) totalWidth+=wordGap; });
+  const c = document.createElement('canvas'); c.width=totalWidth; c.height=cellSize+padding*2;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#0a0a0f';
+  ctx.fillRect(0,0,c.width,c.height);
+  let x = padding;
+  words.forEach((word,wi) => {
+    for (const ch of word) { const u=ch.toUpperCase(); if(letterDefs[u]){const s=drawSymbol(u,cellSize); if(s){ctx.drawImage(s,x,padding);x+=cellSize;}} }
+    if(wi<words.length-1) x+=wordGap;
+  });
+  c.toBlob(callback);
+}
 
-  if (!input) {
-    resultDiv.innerHTML = '<span class="placeholder-text">Paste a cipher code above to reveal the message...</span>';
-    return;
+function shareCipher() {
+  if (document.getElementById('encode-output').querySelectorAll('canvas').length===0) return;
+  buildCipherImageBlob(blob => {
+    const file = new File([blob],'samsung-cipher.png',{type:'image/png'});
+    if (navigator.canShare && navigator.canShare({files:[file]})) { navigator.share({title:'Samsung',text:'Can you decode this?',files:[file]}).catch(()=>{}); }
+    else { showToast(t('toastShareFail')); }
+  });
+}
+
+// ─── SHARE TEMPLATES ───
+const shareTemplates = [
+  {
+    emoji: '\u2600\ufe0f',
+    name: 'Good Morning',
+    build: (code) => `Good morning! \u2600\ufe0f Hope you have an amazing day ahead \u2728\n\n${code}`
+  },
+  {
+    emoji: '\ud83d\udc4b',
+    name: 'Casual Hi',
+    build: (code) => `Heyy! How are you doing? \ud83d\ude0a Just wanted to check on you\n\n${code}`
+  },
+  {
+    emoji: '\ud83c\udf19',
+    name: 'Good Night',
+    build: (code) => `Good night! \ud83c\udf19 Sleep well, talk tomorrow \u2728\n\n${code}`
+  },
+  {
+    emoji: '\u2764\ufe0f',
+    name: 'Thinking of You',
+    build: (code) => `Hey, was just thinking about you \ud83d\ude0a\u2764\ufe0f\n\n${code}`
+  },
+  {
+    emoji: '\ud83d\ude02',
+    name: 'Random Vibe',
+    build: (code) => `Bro guess what \ud83d\ude02\ud83d\ude02 you won't believe this\n\n${code}`
+  },
+  {
+    emoji: '\ud83e\udde9',
+    name: 'Puzzle Challenge',
+    build: (code) => `I bet you can't figure this out \ud83d\ude0f\n\n${code}\n\nGood luck \ud83e\udde9`
+  },
+  {
+    emoji: '\ud83d\udce6',
+    name: 'Just the Code',
+    build: (code) => `${code}`
   }
+];
 
-  const words = input.split(/\s*,\s*/);
-  let decoded = '';
+let pendingShareType = 'code'; // 'code' or 'image'
 
-  words.forEach((word, wi) => {
-    const nums = word.trim().split('.').map(n => parseInt(n, 10));
-    const group = document.createElement('span');
-    group.className = 'word-group';
+function shareCode() {
+  const coded = getCipherCode();
+  if (!coded) return;
+  pendingShareType = 'code';
+  openSharePicker(coded);
+}
 
-    nums.forEach(num => {
-      if (num >= 1 && num <= 26) {
-        const letter = String.fromCharCode(64 + num);
-        decoded += letter;
-        const canvas = drawSymbol(letter, 36);
-        if (canvas) group.appendChild(canvas);
-      }
-    });
+function openSharePicker(coded) {
+  const container = document.getElementById('share-templates');
+  container.innerHTML = '';
 
-    symbolsDiv.appendChild(group);
-
-    if (wi < words.length - 1) {
-      decoded += ' ';
-      const sep = document.createElement('span');
-      sep.className = 'cipher-separator';
-      sep.textContent = ',';
-      symbolsDiv.appendChild(sep);
-    }
+  shareTemplates.forEach((tmpl, i) => {
+    const div = document.createElement('div');
+    div.className = 'share-template';
+    const preview = tmpl.build(coded);
+    // Truncate preview for display
+    const short = preview.length > 120 ? preview.slice(0, 120) + '...' : preview;
+    div.innerHTML = `<div class="share-template-emoji">${tmpl.emoji}</div><div class="share-template-name">${tmpl.name}</div><div class="share-template-preview">${short}</div>`;
+    div.onclick = (e) => { e.stopPropagation(); executeShare(tmpl.build(coded), tmpl.name); };
+    container.appendChild(div);
   });
 
-  resultDiv.textContent = decoded || '';
-  if (!decoded) {
-    resultDiv.innerHTML = '<span class="placeholder-text">Paste a cipher code above to reveal the message...</span>';
+  document.getElementById('share-overlay').classList.add('open');
+}
+
+function closeSharePicker(e) {
+  if (e && e.target !== document.getElementById('share-overlay')) return;
+  document.getElementById('share-overlay').classList.remove('open');
+}
+
+function executeShare(text, templateName) {
+  document.getElementById('share-overlay').classList.remove('open');
+  if (navigator.share) {
+    navigator.share({ title: 'Samsung', text: text }).then(() => showToast(t('toastCodeShared'))).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast(t('toastCopied'))).catch(() => showToast('Could not share.'));
   }
+}
+
+function decodeFromPaste() {
+  const input = document.getElementById('paste-decode-input').value.trim();
+  const resultDiv = document.getElementById('paste-decode-result');
+  if (!input) { resultDiv.innerHTML = '<span class="placeholder-text">'+t('decodePastePlaceholder2')+'</span>'; return; }
+  const words = input.split(/\s*,\s*/);
+  let decoded = '';
+  words.forEach((word,wi) => {
+    const nums = word.trim().split('.').map(n=>parseInt(n,10));
+    nums.forEach(num => { if(num>=1&&num<=26) decoded+=String.fromCharCode(64+num); });
+    if(wi<words.length-1) decoded+=' ';
+  });
+  resultDiv.textContent = decoded || '';
+  if (!decoded) resultDiv.innerHTML = '<span class="placeholder-text">'+t('decodePastePlaceholder2')+'</span>';
 }
 
 // ─── TOAST ───
 let toastTimer = null;
 function showToast(message) {
   const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.classList.add('show');
+  toast.textContent = message; toast.classList.add('show');
   if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3500);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// ─── SHARE ───
-function shareCipher() {
-  const output = document.getElementById('encode-output');
-  const canvases = output.querySelectorAll('canvas');
-  if (canvases.length === 0) return;
-
-  const input = document.getElementById('encode-input').value;
-  const words = input.split(/\s+/);
-
-  const cellSize = 50;
-  const wordGap = 30;
-  const padding = 40;
-
-  let totalWidth = padding * 2;
-  words.forEach((word, i) => {
-    const letterCount = word.replace(/[^a-zA-Z]/g, '').length;
-    totalWidth += letterCount * cellSize;
-    if (i < words.length - 1) totalWidth += wordGap;
-  });
-
-  const exportCanvas = document.createElement('canvas');
-  exportCanvas.width = totalWidth;
-  exportCanvas.height = cellSize + padding * 2;
-  const ctx = exportCanvas.getContext('2d');
-
-  ctx.fillStyle = '#0a0a0f';
-  ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-
-  let x = padding;
-  words.forEach((word, wi) => {
-    for (const char of word) {
-      const upper = char.toUpperCase();
-      if (letterDefs[upper]) {
-        const symCanvas = drawSymbol(upper, cellSize);
-        if (symCanvas) {
-          ctx.drawImage(symCanvas, x, padding);
-          x += cellSize;
-        }
-      }
-    }
-    if (wi < words.length - 1) x += wordGap;
-  });
-
-  exportCanvas.toBlob(blob => {
-    const file = new File([blob], 'pigpen-cipher.png', { type: 'image/png' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({
-        title: 'Pigpen Cipher',
-        text: 'Can you decode this?',
-        files: [file]
-      }).catch(() => {});
-    } else {
-      showToast('Share not supported on this device \u2014 use Copy Image instead.');
-    }
-  });
-}
-
-// ─── COPY REFERENCE CHART AS IMAGE ───
+// ─── COPY CHART ───
 function copyChartImage() {
-  const cols = 9;
-  const rows = 3;
-  const cellW = 80;
-  const cellH = 90;
-  const pad = 30;
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-
-  const w = cols * cellW + pad * 2;
-  const h = rows * cellH + pad * 2 + 40;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-
-  // Background
-  ctx.fillStyle = '#0a0a0f';
-  ctx.fillRect(0, 0, w, h);
-
-  // Title
-  ctx.fillStyle = '#c9a84c';
-  ctx.font = 'bold 18px Cinzel, serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('PIGPEN CIPHER — REFERENCE', w / 2, pad + 6);
-
-  const startY = pad + 40;
-
-  letters.forEach((letter, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x = pad + col * cellW + cellW / 2;
-    const y = startY + row * cellH;
-
-    // Draw symbol
-    const symSize = 44;
-    const symCanvas = drawSymbol(letter, symSize);
-    if (symCanvas) {
-      ctx.drawImage(symCanvas, x - symSize / 2, y);
-    }
-
-    // Draw letter label below
-    ctx.fillStyle = '#c9a84c';
-    ctx.font = 'bold 14px Cinzel, serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(letter, x, y + symSize + 18);
+  const cols=9,rows=3,cellW=80,cellH=90,pad=30;
+  const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const w=cols*cellW+pad*2, h=rows*cellH+pad*2+40;
+  const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  const bgColor=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#0a0a0f';
+  const accentColor=getAccentColor();
+  ctx.fillStyle=bgColor; ctx.fillRect(0,0,w,h);
+  ctx.fillStyle=accentColor; ctx.font='bold 18px Cinzel, serif'; ctx.textAlign='center';
+  ctx.fillText('SAMSUNG \u2014 REFERENCE',w/2,pad+6);
+  const startY=pad+40;
+  letters.forEach((letter,i) => {
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=pad+col*cellW+cellW/2, y=startY+row*cellH;
+    const symSize=44;
+    const symCanvas=drawSymbol(letter,symSize); if(symCanvas) ctx.drawImage(symCanvas,x-symSize/2,y);
+    ctx.fillStyle=accentColor; ctx.font='bold 14px Cinzel, serif'; ctx.textAlign='center';
+    ctx.fillText(letter,x,y+symSize+18);
   });
-
   canvas.toBlob(blob => {
-    const file = new File([blob], 'pigpen-reference.png', { type: 'image/png' });
-
-    // Mobile: use share sheet
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({
-        title: 'Pigpen Cipher Reference',
-        text: 'A-Z Pigpen cipher chart',
-        files: [file]
-      }).catch(() => {});
-      return;
-    }
-
-    // Desktop: copy to clipboard
-    const item = new ClipboardItem({ 'image/png': blob });
-    navigator.clipboard.write([item]).then(() => {
-      showToast('\u{1F34A} Reference chart copied \u2014 paste it to any AI to help decode!');
-    }).catch(() => {
-      showToast('Could not copy chart to clipboard.');
-    });
+    const file=new File([blob],'samsung-reference.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({title:'Samsung Reference',text:'A-Z chart',files:[file]}).catch(()=>{});return;}
+    const item=new ClipboardItem({'image/png':blob});
+    navigator.clipboard.write([item]).then(()=>showToast(t('toastChartCopied'))).catch(()=>showToast('Could not copy.'));
   });
 }
+
+// ─── AGE GATE ───
+function checkAgeGate() { if(localStorage.getItem('samsung_age_verified')) document.getElementById('age-gate').remove(); }
+function submitAge() {
+  const input=document.getElementById('age-input'); const error=document.getElementById('age-error');
+  const age=parseInt(input.value,10);
+  if(!age||age<1||age>120){error.textContent=t('ageError');return;}
+  localStorage.setItem('samsung_age_verified',age);
+  const gate=document.getElementById('age-gate'); gate.classList.add('hiding');
+  setTimeout(()=>gate.remove(),500);
+}
+document.getElementById('age-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitAge();});
+checkAgeGate();
 
 // ─── INIT ───
+setTheme(currentTheme);
+applyLanguage();
 buildSymbolPalette();
 buildReferenceChart();
 </script>
-
 </body>
 </html>
