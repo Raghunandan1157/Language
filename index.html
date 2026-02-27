@@ -555,7 +555,17 @@
     <!-- DECODE MODE -->
     <div id="decode-section" style="display:none;">
       <div class="panel">
-        <div class="panel-label">Tap a symbol to add it to your message</div>
+        <div class="panel-label">Paste a copied cipher code</div>
+        <textarea id="paste-decode-input" placeholder="Paste a code like 8.5.12.12.15 , 23.15.18.12.4 ..." oninput="decodeFromPaste()"></textarea>
+        <div class="panel-label" style="margin-top:16px;">Cipher Symbols</div>
+        <div class="decode-symbols-display" id="paste-decode-symbols"></div>
+        <div class="panel-label" style="margin-top:12px;">Decoded Message</div>
+        <div class="decode-result" id="paste-decode-result">
+          <span class="placeholder-text">Paste a cipher code above to reveal the message...</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Or tap symbols manually</div>
         <div class="symbol-palette" id="symbol-palette"></div>
         <div class="panel-label" style="margin-top:12px;">Your Cipher Message</div>
         <div class="decode-symbols-display" id="decode-symbols"></div>
@@ -1028,57 +1038,73 @@ document.getElementById('age-input').addEventListener('keydown', (e) => {
 
 checkAgeGate();
 
-// ─── COPY TO CLIPBOARD ───
+// ─── COPY TO CLIPBOARD (as text codes) ───
 function copyCipher() {
-  const output = document.getElementById('encode-output');
-  const canvases = output.querySelectorAll('canvas');
-  if (canvases.length === 0) return;
+  const input = document.getElementById('encode-input').value.trim();
+  if (!input) return;
 
-  const input = document.getElementById('encode-input').value;
   const words = input.split(/\s+/);
-
-  const cellSize = 50;
-  const wordGap = 30;
-  const padding = 40;
-
-  let totalWidth = padding * 2;
-  words.forEach((word, i) => {
-    const letterCount = word.replace(/[^a-zA-Z]/g, '').length;
-    totalWidth += letterCount * cellSize;
-    if (i < words.length - 1) totalWidth += wordGap;
-  });
-
-  const exportCanvas = document.createElement('canvas');
-  exportCanvas.width = totalWidth;
-  exportCanvas.height = cellSize + padding * 2;
-  const ctx = exportCanvas.getContext('2d');
-
-  ctx.fillStyle = '#0a0a0f';
-  ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-
-  let x = padding;
-  words.forEach((word, wi) => {
+  const coded = words.map(word => {
+    const nums = [];
     for (const char of word) {
       const upper = char.toUpperCase();
-      if (letterDefs[upper]) {
-        const symCanvas = drawSymbol(upper, cellSize);
-        if (symCanvas) {
-          ctx.drawImage(symCanvas, x, padding);
-          x += cellSize;
-        }
-      }
+      const code = upper.charCodeAt(0) - 64; // A=1, B=2, ... Z=26
+      if (code >= 1 && code <= 26) nums.push(code);
     }
-    if (wi < words.length - 1) x += wordGap;
+    return nums.join('.');
+  }).join(' , ');
+
+  navigator.clipboard.writeText(coded).then(() => {
+    showToast('\u{1F34A} The text is copied \u2014 you can paste it anywhere you like!');
+  }).catch(() => {
+    showToast('Could not copy to clipboard.');
+  });
+}
+
+// ─── DECODE FROM PASTED CODE ───
+function decodeFromPaste() {
+  const input = document.getElementById('paste-decode-input').value.trim();
+  const symbolsDiv = document.getElementById('paste-decode-symbols');
+  const resultDiv = document.getElementById('paste-decode-result');
+  symbolsDiv.innerHTML = '';
+
+  if (!input) {
+    resultDiv.innerHTML = '<span class="placeholder-text">Paste a cipher code above to reveal the message...</span>';
+    return;
+  }
+
+  const words = input.split(/\s*,\s*/);
+  let decoded = '';
+
+  words.forEach((word, wi) => {
+    const nums = word.trim().split('.').map(n => parseInt(n, 10));
+    const group = document.createElement('span');
+    group.className = 'word-group';
+
+    nums.forEach(num => {
+      if (num >= 1 && num <= 26) {
+        const letter = String.fromCharCode(64 + num);
+        decoded += letter;
+        const canvas = drawSymbol(letter, 36);
+        if (canvas) group.appendChild(canvas);
+      }
+    });
+
+    symbolsDiv.appendChild(group);
+
+    if (wi < words.length - 1) {
+      decoded += ' ';
+      const sep = document.createElement('span');
+      sep.className = 'cipher-separator';
+      sep.textContent = ',';
+      symbolsDiv.appendChild(sep);
+    }
   });
 
-  exportCanvas.toBlob(blob => {
-    const item = new ClipboardItem({ 'image/png': blob });
-    navigator.clipboard.write([item]).then(() => {
-      showToast('\u{1F34A} The text is copied — you can paste it anywhere you like!');
-    }).catch(() => {
-      showToast('Could not copy — try Save as Image instead.');
-    });
-  });
+  resultDiv.textContent = decoded || '';
+  if (!decoded) {
+    resultDiv.innerHTML = '<span class="placeholder-text">Paste a cipher code above to reveal the message...</span>';
+  }
 }
 
 // ─── TOAST ───
