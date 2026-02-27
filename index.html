@@ -612,6 +612,7 @@
         <div class="action-bar">
           <button class="action-btn" onclick="copyCipher()">Copy Code</button>
           <button class="action-btn" onclick="copyCipherImage()">Copy Image</button>
+          <button class="action-btn" onclick="shareCipher()">Share</button>
         </div>
       </div>
     </div>
@@ -1156,6 +1157,64 @@ function showToast(message) {
   toastTimer = setTimeout(() => {
     toast.classList.remove('show');
   }, 3500);
+}
+
+// ─── SHARE ───
+function shareCipher() {
+  const output = document.getElementById('encode-output');
+  const canvases = output.querySelectorAll('canvas');
+  if (canvases.length === 0) return;
+
+  const input = document.getElementById('encode-input').value;
+  const words = input.split(/\s+/);
+
+  const cellSize = 50;
+  const wordGap = 30;
+  const padding = 40;
+
+  let totalWidth = padding * 2;
+  words.forEach((word, i) => {
+    const letterCount = word.replace(/[^a-zA-Z]/g, '').length;
+    totalWidth += letterCount * cellSize;
+    if (i < words.length - 1) totalWidth += wordGap;
+  });
+
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = totalWidth;
+  exportCanvas.height = cellSize + padding * 2;
+  const ctx = exportCanvas.getContext('2d');
+
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+  let x = padding;
+  words.forEach((word, wi) => {
+    for (const char of word) {
+      const upper = char.toUpperCase();
+      if (letterDefs[upper]) {
+        const symCanvas = drawSymbol(upper, cellSize);
+        if (symCanvas) {
+          ctx.drawImage(symCanvas, x, padding);
+          x += cellSize;
+        }
+      }
+    }
+    if (wi < words.length - 1) x += wordGap;
+  });
+
+  exportCanvas.toBlob(blob => {
+    const file = new File([blob], 'pigpen-cipher.png', { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({
+        title: 'Pigpen Cipher',
+        text: 'Can you decode this?',
+        files: [file]
+      }).catch(() => {});
+    } else {
+      showToast('Share not supported on this device \u2014 use Copy Image instead.');
+    }
+  });
 }
 
 // ─── COPY REFERENCE CHART AS IMAGE ───
