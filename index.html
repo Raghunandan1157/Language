@@ -546,8 +546,8 @@
           <span class="placeholder-text">Your encoded message will appear here...</span>
         </div>
         <div class="action-bar">
-          <button class="action-btn" onclick="copyCipher()">Copy</button>
-          <button class="action-btn" onclick="downloadCipher()">↓ Save as Image</button>
+          <button class="action-btn" onclick="copyCipher()">Copy Code</button>
+          <button class="action-btn" onclick="copyCipherImage()">Copy Image</button>
         </div>
       </div>
     </div>
@@ -958,20 +958,19 @@ function buildReferenceChart() {
   });
 }
 
-// ─── DOWNLOAD ───
-function downloadCipher() {
+// ─── COPY IMAGE ───
+function copyCipherImage() {
   const output = document.getElementById('encode-output');
   const canvases = output.querySelectorAll('canvas');
   if (canvases.length === 0) return;
 
   const input = document.getElementById('encode-input').value;
   const words = input.split(/\s+/);
-  
+
   const cellSize = 50;
   const wordGap = 30;
   const padding = 40;
-  
-  // Calculate total width
+
   let totalWidth = padding * 2;
   words.forEach((word, i) => {
     const letterCount = word.replace(/[^a-zA-Z]/g, '').length;
@@ -983,10 +982,10 @@ function downloadCipher() {
   exportCanvas.width = totalWidth;
   exportCanvas.height = cellSize + padding * 2;
   const ctx = exportCanvas.getContext('2d');
-  
+
   ctx.fillStyle = '#0a0a0f';
   ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-  
+
   let x = padding;
   words.forEach((word, wi) => {
     for (const char of word) {
@@ -1002,10 +1001,14 @@ function downloadCipher() {
     if (wi < words.length - 1) x += wordGap;
   });
 
-  const link = document.createElement('a');
-  link.download = 'pigpen-cipher.png';
-  link.href = exportCanvas.toDataURL();
-  link.click();
+  exportCanvas.toBlob(blob => {
+    const item = new ClipboardItem({ 'image/png': blob });
+    navigator.clipboard.write([item]).then(() => {
+      showToast('\u{1F34A} Image copied \u2014 you can paste it anywhere you like!');
+    }).catch(() => {
+      showToast('Could not copy image to clipboard.');
+    });
+  });
 }
 
 // ─── AGE GATE ───
