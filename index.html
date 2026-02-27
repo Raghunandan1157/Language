@@ -588,7 +588,7 @@
         <rect x="3" y="14" width="7" height="7" rx="1"/>
         <rect x="14" y="14" width="7" height="7" rx="1"/>
       </svg>
-      <span class="tooltip">Copy A-Z chart to clipboard</span>
+      <span class="tooltip">Share / Copy A-Z chart</span>
     </button>
   </div>
 
@@ -1267,6 +1267,19 @@ function copyChartImage() {
   });
 
   canvas.toBlob(blob => {
+    const file = new File([blob], 'pigpen-reference.png', { type: 'image/png' });
+
+    // Mobile: use share sheet
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({
+        title: 'Pigpen Cipher Reference',
+        text: 'A-Z Pigpen cipher chart',
+        files: [file]
+      }).catch(() => {});
+      return;
+    }
+
+    // Desktop: copy to clipboard
     const item = new ClipboardItem({ 'image/png': blob });
     navigator.clipboard.write([item]).then(() => {
       showToast('\u{1F34A} Reference chart copied \u2014 paste it to any AI to help decode!');
