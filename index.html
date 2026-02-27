@@ -605,105 +605,6 @@
     .toast { bottom: 72px; font-size: 0.72rem; padding: 10px 16px; }
   }
 
-  /* ─── SHARE PICKER MODAL ─── */
-  .share-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    z-index: 5000;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-  }
-  .share-overlay.open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .share-sheet {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px 16px 0 0;
-    width: 100%;
-    max-width: 480px;
-    max-height: 80vh;
-    overflow-y: auto;
-    padding: 20px 16px 28px;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-  }
-  .share-overlay.open .share-sheet {
-    transform: translateY(0);
-  }
-
-  .share-sheet-title {
-    font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
-    letter-spacing: 0.15em;
-    color: var(--accent);
-    text-align: center;
-    margin-bottom: 16px;
-  }
-
-  .share-sheet-close {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    font-size: 1.4rem;
-    cursor: pointer;
-    line-height: 1;
-  }
-
-  .share-template {
-    padding: 14px;
-    background: rgba(0,0,0,0.25);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: all 0.25s;
-    position: relative;
-  }
-  .share-template:hover, .share-template:active {
-    border-color: var(--accent);
-    background: var(--accent-glow);
-  }
-
-  .share-template-emoji {
-    font-size: 1.4rem;
-    margin-bottom: 6px;
-  }
-
-  .share-template-name {
-    font-family: 'Cinzel', serif;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-
-  .share-template-preview {
-    font-size: 0.62rem;
-    color: var(--text-dim);
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  @media (min-width: 641px) {
-    .share-sheet {
-      border-radius: 16px;
-      margin-bottom: 40px;
-    }
-  }
 
   /* Extra small phones */
   @media (max-width: 380px) {
@@ -733,13 +634,6 @@
 <div class="toast" id="toast"></div>
 
 <!-- Share Picker Modal -->
-<div class="share-overlay" id="share-overlay" onclick="closeSharePicker(event)">
-  <div class="share-sheet" id="share-sheet">
-    <div class="share-sheet-title" id="share-sheet-title">Pick a vibe</div>
-    <div id="share-templates"></div>
-  </div>
-</div>
-
 <!-- Bottom Nav (mobile) -->
 <nav class="bottom-nav" id="bottom-nav">
   <button class="bottom-nav-btn active" onclick="switchTab('cipher')" id="bnav-cipher">
@@ -996,7 +890,7 @@ function applyLanguage() {
 function setLanguage(lang) { currentLang = lang; applyLanguage(); }
 
 // ─── THEMES ───
-const themeBadges = { 'default':'', 'orange':'\ud83c\udf4a\ud83e\udde1', 'red':'\u2764\ufe0f\u200d\ud83d\udd25', 'black':'\ud83d\udda4' };
+const themeBadges = { 'default':'', 'orange':'\ud83c\udf4a\ud83e\udde1', 'red':'\ud83d\udd25', 'black':'\ud83d\udda4' };
 
 function setTheme(theme) {
   currentTheme = theme;
@@ -1198,83 +1092,13 @@ function shareCipher() {
   });
 }
 
-// ─── SHARE TEMPLATES ───
-const shareTemplates = [
-  {
-    emoji: '\u2600\ufe0f',
-    name: 'Good Morning',
-    build: (code) => `Good morning! \u2600\ufe0f Hope you have an amazing day ahead \u2728\n\n${code}`
-  },
-  {
-    emoji: '\ud83d\udc4b',
-    name: 'Casual Hi',
-    build: (code) => `Heyy! How are you doing? \ud83d\ude0a Just wanted to check on you\n\n${code}`
-  },
-  {
-    emoji: '\ud83c\udf19',
-    name: 'Good Night',
-    build: (code) => `Good night! \ud83c\udf19 Sleep well, talk tomorrow \u2728\n\n${code}`
-  },
-  {
-    emoji: '\u2764\ufe0f',
-    name: 'Thinking of You',
-    build: (code) => `Hey, was just thinking about you \ud83d\ude0a\u2764\ufe0f\n\n${code}`
-  },
-  {
-    emoji: '\ud83d\ude02',
-    name: 'Random Vibe',
-    build: (code) => `Bro guess what \ud83d\ude02\ud83d\ude02 you won't believe this\n\n${code}`
-  },
-  {
-    emoji: '\ud83e\udde9',
-    name: 'Puzzle Challenge',
-    build: (code) => `I bet you can't figure this out \ud83d\ude0f\n\n${code}\n\nGood luck \ud83e\udde9`
-  },
-  {
-    emoji: '\ud83d\udce6',
-    name: 'Just the Code',
-    build: (code) => `${code}`
-  }
-];
-
-let pendingShareType = 'code'; // 'code' or 'image'
-
 function shareCode() {
   const coded = getCipherCode();
   if (!coded) return;
-  pendingShareType = 'code';
-  openSharePicker(coded);
-}
-
-function openSharePicker(coded) {
-  const container = document.getElementById('share-templates');
-  container.innerHTML = '';
-
-  shareTemplates.forEach((tmpl, i) => {
-    const div = document.createElement('div');
-    div.className = 'share-template';
-    const preview = tmpl.build(coded);
-    // Truncate preview for display
-    const short = preview.length > 120 ? preview.slice(0, 120) + '...' : preview;
-    div.innerHTML = `<div class="share-template-emoji">${tmpl.emoji}</div><div class="share-template-name">${tmpl.name}</div><div class="share-template-preview">${short}</div>`;
-    div.onclick = (e) => { e.stopPropagation(); executeShare(tmpl.build(coded), tmpl.name); };
-    container.appendChild(div);
-  });
-
-  document.getElementById('share-overlay').classList.add('open');
-}
-
-function closeSharePicker(e) {
-  if (e && e.target !== document.getElementById('share-overlay')) return;
-  document.getElementById('share-overlay').classList.remove('open');
-}
-
-function executeShare(text, templateName) {
-  document.getElementById('share-overlay').classList.remove('open');
   if (navigator.share) {
-    navigator.share({ title: 'Samsung', text: text }).then(() => showToast(t('toastCodeShared'))).catch(() => {});
+    navigator.share({ title: 'Samsung', text: coded }).then(() => showToast(t('toastCodeShared'))).catch(() => {});
   } else {
-    navigator.clipboard.writeText(text).then(() => showToast(t('toastCopied'))).catch(() => showToast('Could not share.'));
+    navigator.clipboard.writeText(coded).then(() => showToast(t('toastCopied'))).catch(() => showToast('Could not share.'));
   }
 }
 
