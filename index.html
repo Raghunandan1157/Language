@@ -372,6 +372,126 @@
     margin-bottom: 12px;
   }
 
+  /* Age Gate Overlay */
+  .age-gate {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .age-gate.hiding {
+    animation: fadeOut 0.5s ease forwards;
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; pointer-events: none; }
+  }
+
+  .age-gate-box {
+    text-align: center;
+    max-width: 400px;
+    padding: 40px;
+  }
+
+  .age-gate-box h2 {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 2rem;
+    color: var(--gold);
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+
+  .age-gate-box p {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .age-input-wrapper {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .age-input {
+    width: 100px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.2rem;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  .age-input:focus {
+    border-color: var(--gold);
+  }
+
+  .age-submit {
+    padding: 12px 28px;
+    background: var(--gold);
+    border: none;
+    border-radius: 8px;
+    color: var(--bg);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: opacity 0.3s;
+  }
+
+  .age-submit:hover {
+    opacity: 0.85;
+  }
+
+  .age-error {
+    color: var(--red);
+    font-size: 0.75rem;
+    margin-top: 14px;
+    min-height: 1.2em;
+  }
+
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 16px 28px;
+    color: var(--text);
+    font-size: 0.85rem;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 4px 30px rgba(201, 168, 76, 0.2);
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+
   /* Responsive */
   @media (max-width: 600px) {
     .header h1 { font-size: 1.8rem; }
@@ -379,10 +499,28 @@
     .panel { padding: 18px; }
     .chart-grid { grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); }
     .symbol-palette { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
+    .age-gate-box { padding: 24px; }
+    .age-gate-box h2 { font-size: 1.5rem; }
   }
 </style>
 </head>
 <body>
+
+<!-- Age Gate -->
+<div class="age-gate" id="age-gate">
+  <div class="age-gate-box">
+    <h2>PIGPEN</h2>
+    <p>Please enter your age to proceed</p>
+    <div class="age-input-wrapper">
+      <input type="number" class="age-input" id="age-input" placeholder="Age" min="1" max="120" autofocus>
+      <button class="age-submit" onclick="submitAge()">Enter</button>
+    </div>
+    <div class="age-error" id="age-error"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <div class="container">
   <div class="header">
@@ -408,6 +546,7 @@
           <span class="placeholder-text">Your encoded message will appear here...</span>
         </div>
         <div class="action-bar">
+          <button class="action-btn" onclick="copyCipher()">Copy</button>
           <button class="action-btn" onclick="downloadCipher()">↓ Save as Image</button>
         </div>
       </div>
@@ -857,6 +996,101 @@ function downloadCipher() {
   link.download = 'pigpen-cipher.png';
   link.href = exportCanvas.toDataURL();
   link.click();
+}
+
+// ─── AGE GATE ───
+function checkAgeGate() {
+  const gate = document.getElementById('age-gate');
+  if (localStorage.getItem('pigpen_age_verified')) {
+    gate.remove();
+  }
+}
+
+function submitAge() {
+  const input = document.getElementById('age-input');
+  const error = document.getElementById('age-error');
+  const age = parseInt(input.value, 10);
+
+  if (!age || age < 1 || age > 120) {
+    error.textContent = 'Please enter a valid age.';
+    return;
+  }
+
+  localStorage.setItem('pigpen_age_verified', age);
+  const gate = document.getElementById('age-gate');
+  gate.classList.add('hiding');
+  setTimeout(() => gate.remove(), 500);
+}
+
+document.getElementById('age-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitAge();
+});
+
+checkAgeGate();
+
+// ─── COPY TO CLIPBOARD ───
+function copyCipher() {
+  const output = document.getElementById('encode-output');
+  const canvases = output.querySelectorAll('canvas');
+  if (canvases.length === 0) return;
+
+  const input = document.getElementById('encode-input').value;
+  const words = input.split(/\s+/);
+
+  const cellSize = 50;
+  const wordGap = 30;
+  const padding = 40;
+
+  let totalWidth = padding * 2;
+  words.forEach((word, i) => {
+    const letterCount = word.replace(/[^a-zA-Z]/g, '').length;
+    totalWidth += letterCount * cellSize;
+    if (i < words.length - 1) totalWidth += wordGap;
+  });
+
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = totalWidth;
+  exportCanvas.height = cellSize + padding * 2;
+  const ctx = exportCanvas.getContext('2d');
+
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+  let x = padding;
+  words.forEach((word, wi) => {
+    for (const char of word) {
+      const upper = char.toUpperCase();
+      if (letterDefs[upper]) {
+        const symCanvas = drawSymbol(upper, cellSize);
+        if (symCanvas) {
+          ctx.drawImage(symCanvas, x, padding);
+          x += cellSize;
+        }
+      }
+    }
+    if (wi < words.length - 1) x += wordGap;
+  });
+
+  exportCanvas.toBlob(blob => {
+    const item = new ClipboardItem({ 'image/png': blob });
+    navigator.clipboard.write([item]).then(() => {
+      showToast('\u{1F34A} The text is copied — you can paste it anywhere you like!');
+    }).catch(() => {
+      showToast('Could not copy — try Save as Image instead.');
+    });
+  });
+}
+
+// ─── TOAST ───
+let toastTimer = null;
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3500);
 }
 
 // ─── INIT ───
