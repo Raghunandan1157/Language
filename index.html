@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pigpen Cipher</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #2a2a3a;
+    --gold: #c9a84c;
+    --gold-dim: #8a7033;
+    --gold-glow: rgba(201, 168, 76, 0.15);
+    --text: #e8e4d9;
+    --text-dim: #7a7668;
+    --red: #a44;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 50%, rgba(201,168,76,0.02) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 50px;
+    position: relative;
+  }
+
+  .header h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 2.8rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.2);
+    margin-bottom: 8px;
+  }
+
+  .header .subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .header::after {
+    content: '';
+    display: block;
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin: 20px auto 0;
+  }
+
+  /* Mode Toggle */
+  .mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 40px;
+  }
+
+  .mode-btn {
+    padding: 12px 36px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .mode-btn:first-child { border-radius: 6px 0 0 6px; }
+  .mode-btn:last-child { border-radius: 0 6px 6px 0; }
+
+  .mode-btn.active {
+    background: var(--gold);
+    color: var(--bg);
+    border-color: var(--gold);
+    font-weight: 700;
+  }
+
+  .mode-btn:hover:not(.active) {
+    border-color: var(--gold-dim);
+    color: var(--text);
+  }
+
+  /* Main Sections */
+  .workspace {
+    display: grid;
+    gap: 30px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    position: relative;
+  }
+
+  .panel-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 16px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 100px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  textarea:focus {
+    border-color: var(--gold-dim);
+  }
+
+  textarea::placeholder {
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  /* Cipher Output */
+  .cipher-display {
+    min-height: 120px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    line-height: 1;
+  }
+
+  .cipher-display .word-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .cipher-separator {
+    color: var(--gold);
+    font-size: 1.8rem;
+    font-weight: 700;
+    font-family: 'Cinzel', serif;
+    line-height: 40px;
+    margin: 0 8px;
+    user-select: none;
+  }
+
+  .cipher-display canvas {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .cipher-display .space {
+    width: 20px;
+  }
+
+  .placeholder-text {
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 0.85rem;
+  }
+
+  /* Reference Chart */
+  .reference-toggle {
+    text-align: center;
+    margin-top: 30px;
+  }
+
+  .ref-btn {
+    padding: 10px 28px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .ref-btn:hover {
+    border-color: var(--gold-dim);
+    color: var(--gold);
+  }
+
+  .reference-chart {
+    margin-top: 20px;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .reference-chart.show { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 10px;
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .chart-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 4px;
+    border-radius: 6px;
+    transition: background 0.2s;
+  }
+
+  .chart-item:hover {
+    background: var(--gold-glow);
+  }
+
+  .chart-letter {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--gold);
+  }
+
+  /* Copy button */
+  .action-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .action-btn {
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .action-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* Decode mode clickable symbols */
+  .decode-input-area {
+    display: none;
+  }
+
+  .decode-input-area.show {
+    display: block;
+  }
+
+  .symbol-palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 6px;
+    padding: 16px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+
+  .symbol-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .symbol-btn:hover {
+    border-color: var(--gold);
+    background: var(--gold-glow);
+  }
+
+  .symbol-btn .sym-label {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .decode-result {
+    min-height: 60px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    word-break: break-word;
+  }
+
+  .decode-symbols-display {
+    min-height: 80px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.8rem; }
+    .container { padding: 24px 14px; }
+    .panel { padding: 18px; }
+    .chart-grid { grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); }
+    .symbol-palette { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>PIGPEN</h1>
+    <div class="subtitle">Freemason's Cipher · Encoder & Decoder</div>
+  </div>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('encode')">Encode</button>
+    <button class="mode-btn" onclick="setMode('decode')">Decode</button>
+  </div>
+
+  <div class="workspace">
+    <!-- ENCODE MODE -->
+    <div id="encode-section">
+      <div class="panel">
+        <div class="panel-label">Plaintext</div>
+        <textarea id="encode-input" placeholder="Type your secret message here..." oninput="encode()"></textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Cipher Output</div>
+        <div class="cipher-display" id="encode-output">
+          <span class="placeholder-text">Your encoded message will appear here...</span>
+        </div>
+        <div class="action-bar">
+          <button class="action-btn" onclick="downloadCipher()">↓ Save as Image</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECODE MODE -->
+    <div id="decode-section" style="display:none;">
+      <div class="panel">
+        <div class="panel-label">Tap a symbol to add it to your message</div>
+        <div class="symbol-palette" id="symbol-palette"></div>
+        <div class="panel-label" style="margin-top:12px;">Your Cipher Message</div>
+        <div class="decode-symbols-display" id="decode-symbols"></div>
+        <div class="action-bar">
+          <button class="action-btn" onclick="decodeBackspace()">← Backspace</button>
+          <button class="action-btn" onclick="decodeAddSpace()">, Add Space</button>
+          <button class="action-btn" onclick="decodeClear()">Clear</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Decoded Plaintext</div>
+        <div class="decode-result" id="decode-result">
+          <span class="placeholder-text">Tap symbols above to reveal the hidden message...</span>
+        </div>
+      </div>
+      <div class="panel" style="margin-top: 10px;">
+        <div class="panel-label">Quick decode — type letters directly</div>
+        <textarea id="decode-text-input" placeholder="Type letters A-Z to see their Pigpen symbols..." oninput="decodeFromText()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENCE -->
+  <div class="reference-toggle">
+    <button class="ref-btn" onclick="toggleReference()">⊞ Reference Chart</button>
+  </div>
+  <div class="reference-chart" id="reference-chart">
+    <div class="chart-grid" id="chart-grid"></div>
+  </div>
+</div>
+
+<script>
+// ─── PIGPEN CIPHER DEFINITIONS ───
+// Each letter maps to drawing instructions
+// type: 'grid' or 'x'
+// lines: array of line segments [x1,y1,x2,y2] in a 40x40 cell
+// dot: boolean
+
+const S = 40; // cell size
+const P = 6;  // padding
+const LW = 2.5;
+
+const cipherMap = {}; // unused
+
+// Standard Pigpen cipher symbol definitions
+// Each cell in the 3x3 grid uses the GRID LINES that form its borders
+// Coordinate system: (0,0) top-left of cell, S=40 cell size, P=6 padding
+// Lines are [x1,y1, x2,y2]
+//
+// The tic-tac-toe grid:
+//   AB | CD | EF
+//   ---+----+---
+//   GH | IJ | KL
+//   ---+----+---
+//   MN | OP | QR
+//
+// Each cell's symbol = the grid lines touching that cell
+// Top-left (A/B):     right border, bottom border         → ┘
+// Top-center (C/D):   left border, right border, bottom   → └┘ (U shape)
+// Top-right (E/F):    left border, bottom border          → └
+// Mid-left (G/H):     right border, top border            → ┐  
+// Mid-center (I/J):   left, right, top                    → ┌┐ (∩ shape)
+// Mid-right (K/L):    left border, top border             → ┌
+// Bot-left (M/N):     right border, top border, bottom    → ┐ with bottom line
+// Bot-center (O/P):   all 4 borders                       → □ box
+// Bot-right (Q/R):    left border, top border, bottom     → ┌ with bottom line
+
+const letterDefs = {};
+
+// G = ┐ → bottom-right corner (right wall + bottom wall) - WAIT that's same as A
+// Actually, looking at the user's handwriting:
+// Row 1 (top cells): walls from the grid line BELOW → bottom + sides
+// Row 2 (middle cells): walls from the grid line ABOVE → top + sides  
+// Row 3 (bottom cells): walls from BOTH grid lines → top + bottom + sides
+//
+// NO - let me just match the user's handwriting directly.
+// "HEY RAGHU":
+// H(•┐) E(└) Y(>) R(└•) A(┘) G(┐) H(•┐) U(>)
+// 
+// From handwriting image, H looks like dot + lines on RIGHT and BOTTOM
+// That means G/H = right+bottom (same shape as A/B but... that can't be right)
+//
+// WAIT - I think the correct standard Pigpen is:
+// Row 1: bottom only as the horizontal line
+// Row 2: top AND bottom horizontal lines  
+// Row 3: top only as the horizontal line
+//
+// So:
+// A(top-left):    right + bottom        = ┘
+// C(top-mid):     left + right + bottom  = └┘
+// E(top-right):   left + bottom          = └
+// G(mid-left):    right + top + bottom   = ┐ with bottom line (3-sided open left)
+// I(mid-mid):     all 4 sides            = □ box
+// K(mid-right):   left + top + bottom    = ┌ with bottom line (3-sided open right)
+// M(bot-left):    right + top            = ┐
+// O(bot-mid):     left + right + top     = ┌┐
+// Q(bot-right):   left + top             = ┌
+
+// A = ┘ → right + bottom
+letterDefs['A'] = { lines: [
+  [S-P, P, S-P, S-P],   // right wall
+  [P, S-P, S-P, S-P]    // bottom wall
+], dot: false };
+letterDefs['B'] = { lines: [...letterDefs['A'].lines], dot: true };
+
+// C = └┘ → left + right + bottom (U open top)
+letterDefs['C'] = { lines: [
+  [P, P, P, S-P],
+  [S-P, P, S-P, S-P],
+  [P, S-P, S-P, S-P]
+], dot: false };
+letterDefs['D'] = { lines: [...letterDefs['C'].lines], dot: true };
+
+// E = └ → left + bottom
+letterDefs['E'] = { lines: [
+  [P, P, P, S-P],
+  [P, S-P, S-P, S-P]
+], dot: false };
+letterDefs['F'] = { lines: [...letterDefs['E'].lines], dot: true };
+
+// G = 3-sided open left (right + top + bottom)
+letterDefs['G'] = { lines: [
+  [S-P, P, S-P, S-P],   // right wall
+  [P, P, S-P, P],       // top wall
+  [P, S-P, S-P, S-P]    // bottom wall
+], dot: false };
+letterDefs['H'] = { lines: [...letterDefs['G'].lines], dot: true };
+
+// I = □ full box (all 4 walls)
+letterDefs['I'] = { lines: [
+  [P, P, P, S-P],
+  [S-P, P, S-P, S-P],
+  [P, P, S-P, P],
+  [P, S-P, S-P, S-P]
+], dot: false };
+letterDefs['J'] = { lines: [...letterDefs['I'].lines], dot: true };
+
+// K = 3-sided open right (left + top + bottom)
+letterDefs['K'] = { lines: [
+  [P, P, P, S-P],       // left wall
+  [P, P, S-P, P],       // top wall
+  [P, S-P, S-P, S-P]    // bottom wall
+], dot: false };
+letterDefs['L'] = { lines: [...letterDefs['K'].lines], dot: true };
+
+// M = ┐ → right + top
+letterDefs['M'] = { lines: [
+  [S-P, P, S-P, S-P],   // right wall
+  [P, P, S-P, P]        // top wall
+], dot: false };
+letterDefs['N'] = { lines: [...letterDefs['M'].lines], dot: true };
+
+// O = ┌┐ → left + right + top (∩ open bottom)
+letterDefs['O'] = { lines: [
+  [P, P, P, S-P],
+  [S-P, P, S-P, S-P],
+  [P, P, S-P, P]
+], dot: false };
+letterDefs['P'] = { lines: [...letterDefs['O'].lines], dot: true };
+
+// Q = ┌ → left + top
+letterDefs['Q'] = { lines: [
+  [P, P, P, S-P],       // left wall
+  [P, P, S-P, P]        // top wall
+], dot: false };
+letterDefs['R'] = { lines: [...letterDefs['Q'].lines], dot: true };
+
+// ─── X-GRID: S T U V W X Y Z ───
+// S = ∨ (bottom wedge - open top)
+letterDefs['S'] = { lines: [
+  [P, P, S/2, S-P],
+  [S-P, P, S/2, S-P]
+], dot: false, type: 'x' };
+letterDefs['T'] = { lines: [...letterDefs['S'].lines], dot: true, type: 'x' };
+
+// U = < (left wedge - open right) — opposite of Y
+letterDefs['U'] = { lines: [
+  [S-P, P, P, S/2],
+  [P, S/2, S-P, S-P]
+], dot: false, type: 'x' };
+letterDefs['V'] = { lines: [...letterDefs['U'].lines], dot: true, type: 'x' };
+
+// W = ∧ (top wedge - open bottom) — opposite of S
+letterDefs['W'] = { lines: [
+  [S/2, P, P, S-P],
+  [S/2, P, S-P, S-P]
+], dot: false, type: 'x' };
+letterDefs['X'] = { lines: [...letterDefs['W'].lines], dot: true, type: 'x' };
+
+// Y = > (right wedge - open left) — opposite of U
+letterDefs['Y'] = { lines: [
+  [P, P, S-P, S/2],
+  [S-P, S/2, P, S-P]
+], dot: false, type: 'x' };
+letterDefs['Z'] = { lines: [...letterDefs['Y'].lines], dot: true, type: 'x' };
+
+// ─── DRAWING ───
+function drawSymbol(letter, size = 40) {
+  const canvas = document.createElement('canvas');
+  const scale = size / 40;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  
+  const def = letterDefs[letter.toUpperCase()];
+  if (!def) return null;
+
+  ctx.strokeStyle = '#c9a84c';
+  ctx.lineWidth = LW * scale;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  def.lines.forEach(([x1, y1, x2, y2]) => {
+    ctx.beginPath();
+    ctx.moveTo(x1 * scale, y1 * scale);
+    ctx.lineTo(x2 * scale, y2 * scale);
+    ctx.stroke();
+  });
+
+  if (def.dot) {
+    ctx.fillStyle = '#c9a84c';
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, 3 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  return canvas;
+}
+
+// ─── ENCODE ───
+function encode() {
+  const input = document.getElementById('encode-input').value;
+  const output = document.getElementById('encode-output');
+  output.innerHTML = '';
+
+  if (!input.trim()) {
+    output.innerHTML = '<span class="placeholder-text">Your encoded message will appear here...</span>';
+    return;
+  }
+
+  const words = input.split(/\s+/);
+  words.forEach((word, wi) => {
+    const group = document.createElement('span');
+    group.className = 'word-group';
+    
+    for (const char of word) {
+      const upper = char.toUpperCase();
+      if (letterDefs[upper]) {
+        const canvas = drawSymbol(upper, 40);
+        if (canvas) group.appendChild(canvas);
+      }
+    }
+    
+    output.appendChild(group);
+
+    // Add comma separator between words
+    if (wi < words.length - 1) {
+      const comma = document.createElement('span');
+      comma.className = 'cipher-separator';
+      comma.textContent = ',';
+      output.appendChild(comma);
+    }
+  });
+}
+
+// ─── DECODE ───
+let decodeLetters = [];
+
+function buildSymbolPalette() {
+  const palette = document.getElementById('symbol-palette');
+  palette.innerHTML = '';
+  
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
+    const btn = document.createElement('button');
+    btn.className = 'symbol-btn';
+    
+    const canvas = drawSymbol(letter, 36);
+    if (canvas) btn.appendChild(canvas);
+    
+    const label = document.createElement('span');
+    label.className = 'sym-label';
+    label.textContent = letter;
+    btn.appendChild(label);
+    
+    btn.onclick = () => {
+      decodeLetters.push(letter);
+      updateDecodeDisplay();
+    };
+    
+    palette.appendChild(btn);
+  });
+}
+
+function updateDecodeDisplay() {
+  const symbolsDiv = document.getElementById('decode-symbols');
+  const resultDiv = document.getElementById('decode-result');
+  symbolsDiv.innerHTML = '';
+  
+  decodeLetters.forEach(item => {
+    if (item === ' ') {
+      const spacer = document.createElement('span');
+      spacer.style.width = '20px';
+      spacer.style.display = 'inline-block';
+      symbolsDiv.appendChild(spacer);
+    } else {
+      const canvas = drawSymbol(item, 36);
+      if (canvas) symbolsDiv.appendChild(canvas);
+    }
+  });
+
+  const text = decodeLetters.join('');
+  if (text) {
+    resultDiv.innerHTML = '';
+    resultDiv.textContent = text;
+  } else {
+    resultDiv.innerHTML = '<span class="placeholder-text">Click symbols above to decode...</span>';
+  }
+}
+
+function decodeBackspace() {
+  decodeLetters.pop();
+  updateDecodeDisplay();
+}
+
+function decodeAddSpace() {
+  decodeLetters.push(' ');
+  updateDecodeDisplay();
+}
+
+function decodeClear() {
+  decodeLetters = [];
+  updateDecodeDisplay();
+}
+
+function decodeFromText() {
+  const input = document.getElementById('decode-text-input').value.toUpperCase();
+  const resultDiv = document.getElementById('decode-result');
+  const symbolsDiv = document.getElementById('decode-symbols');
+  symbolsDiv.innerHTML = '';
+
+  for (const char of input) {
+    if (char === ' ') {
+      const spacer = document.createElement('span');
+      spacer.style.width = '20px';
+      spacer.style.display = 'inline-block';
+      symbolsDiv.appendChild(spacer);
+    } else if (letterDefs[char]) {
+      const canvas = drawSymbol(char, 36);
+      if (canvas) symbolsDiv.appendChild(canvas);
+    }
+  }
+
+  resultDiv.textContent = input || '';
+  if (!input) {
+    resultDiv.innerHTML = '<span class="placeholder-text">Click symbols above to decode...</span>';
+  }
+}
+
+// ─── MODE TOGGLE ───
+function setMode(mode) {
+  document.querySelectorAll('.mode-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', (mode === 'encode' && i === 0) || (mode === 'decode' && i === 1));
+  });
+  document.getElementById('encode-section').style.display = mode === 'encode' ? 'block' : 'none';
+  document.getElementById('decode-section').style.display = mode === 'decode' ? 'block' : 'none';
+}
+
+// ─── REFERENCE CHART ───
+function toggleReference() {
+  document.getElementById('reference-chart').classList.toggle('show');
+}
+
+function buildReferenceChart() {
+  const grid = document.getElementById('chart-grid');
+  grid.innerHTML = '';
+  
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
+    const item = document.createElement('div');
+    item.className = 'chart-item';
+    
+    const canvas = drawSymbol(letter, 40);
+    if (canvas) item.appendChild(canvas);
+    
+    const label = document.createElement('div');
+    label.className = 'chart-letter';
+    label.textContent = letter;
+    item.appendChild(label);
+    
+    grid.appendChild(item);
+  });
+}
+
+// ─── DOWNLOAD ───
+function downloadCipher() {
+  const output = document.getElementById('encode-output');
+  const canvases = output.querySelectorAll('canvas');
+  if (canvases.length === 0) return;
+
+  const input = document.getElementById('encode-input').value;
+  const words = input.split(/\s+/);
+  
+  const cellSize = 50;
+  const wordGap = 30;
+  const padding = 40;
+  
+  // Calculate total width
+  let totalWidth = padding * 2;
+  words.forEach((word, i) => {
+    const letterCount = word.replace(/[^a-zA-Z]/g, '').length;
+    totalWidth += letterCount * cellSize;
+    if (i < words.length - 1) totalWidth += wordGap;
+  });
+
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = totalWidth;
+  exportCanvas.height = cellSize + padding * 2;
+  const ctx = exportCanvas.getContext('2d');
+  
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  
+  let x = padding;
+  words.forEach((word, wi) => {
+    for (const char of word) {
+      const upper = char.toUpperCase();
+      if (letterDefs[upper]) {
+        const symCanvas = drawSymbol(upper, cellSize);
+        if (symCanvas) {
+          ctx.drawImage(symCanvas, x, padding);
+          x += cellSize;
+        }
+      }
+    }
+    if (wi < words.length - 1) x += wordGap;
+  });
+
+  const link = document.createElement('a');
+  link.download = 'pigpen-cipher.png';
+  link.href = exportCanvas.toDataURL();
+  link.click();
+}
+
+// ─── INIT ───
+buildSymbolPalette();
+buildReferenceChart();
+</script>
+
+</body>
+</html>
