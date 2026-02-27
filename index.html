@@ -55,6 +55,61 @@
     position: relative;
   }
 
+  .chart-copy-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .chart-copy-btn:hover {
+    border-color: var(--gold);
+    background: var(--gold-glow);
+  }
+
+  .chart-copy-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--gold-dim);
+    fill: none;
+    stroke-width: 2;
+    transition: stroke 0.3s;
+  }
+
+  .chart-copy-btn:hover svg {
+    stroke: var(--gold);
+  }
+
+  .chart-copy-btn .tooltip {
+    position: absolute;
+    top: 52px;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .chart-copy-btn:hover .tooltip {
+    opacity: 1;
+  }
+
   .header h1 {
     font-family: 'Cinzel', serif;
     font-weight: 900;
@@ -526,6 +581,15 @@
   <div class="header">
     <h1>PIGPEN</h1>
     <div class="subtitle">Freemason's Cipher · Encoder & Decoder</div>
+    <button class="chart-copy-btn" onclick="copyChartImage()" title="Copy reference chart">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span class="tooltip">Copy A-Z chart to clipboard</span>
+    </button>
   </div>
 
   <div class="mode-toggle">
@@ -580,10 +644,6 @@
         <div class="decode-result" id="decode-result">
           <span class="placeholder-text">Tap symbols above to reveal the hidden message...</span>
         </div>
-      </div>
-      <div class="panel" style="margin-top: 10px;">
-        <div class="panel-label">Quick decode — type letters directly</div>
-        <textarea id="decode-text-input" placeholder="Type letters A-Z to see their Pigpen symbols..." oninput="decodeFromText()"></textarea>
       </div>
     </div>
   </div>
@@ -900,30 +960,6 @@ function decodeClear() {
   updateDecodeDisplay();
 }
 
-function decodeFromText() {
-  const input = document.getElementById('decode-text-input').value.toUpperCase();
-  const resultDiv = document.getElementById('decode-result');
-  const symbolsDiv = document.getElementById('decode-symbols');
-  symbolsDiv.innerHTML = '';
-
-  for (const char of input) {
-    if (char === ' ') {
-      const spacer = document.createElement('span');
-      spacer.style.width = '20px';
-      spacer.style.display = 'inline-block';
-      symbolsDiv.appendChild(spacer);
-    } else if (letterDefs[char]) {
-      const canvas = drawSymbol(char, 36);
-      if (canvas) symbolsDiv.appendChild(canvas);
-    }
-  }
-
-  resultDiv.textContent = input || '';
-  if (!input) {
-    resultDiv.innerHTML = '<span class="placeholder-text">Click symbols above to decode...</span>';
-  }
-}
-
 // ─── MODE TOGGLE ───
 function setMode(mode) {
   document.querySelectorAll('.mode-btn').forEach((btn, i) => {
@@ -1120,6 +1156,65 @@ function showToast(message) {
   toastTimer = setTimeout(() => {
     toast.classList.remove('show');
   }, 3500);
+}
+
+// ─── COPY REFERENCE CHART AS IMAGE ───
+function copyChartImage() {
+  const cols = 9;
+  const rows = 3;
+  const cellW = 80;
+  const cellH = 90;
+  const pad = 30;
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+  const w = cols * cellW + pad * 2;
+  const h = rows * cellH + pad * 2 + 40;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, w, h);
+
+  // Title
+  ctx.fillStyle = '#c9a84c';
+  ctx.font = 'bold 18px Cinzel, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('PIGPEN CIPHER — REFERENCE', w / 2, pad + 6);
+
+  const startY = pad + 40;
+
+  letters.forEach((letter, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = pad + col * cellW + cellW / 2;
+    const y = startY + row * cellH;
+
+    // Draw symbol
+    const symSize = 44;
+    const symCanvas = drawSymbol(letter, symSize);
+    if (symCanvas) {
+      ctx.drawImage(symCanvas, x - symSize / 2, y);
+    }
+
+    // Draw letter label below
+    ctx.fillStyle = '#c9a84c';
+    ctx.font = 'bold 14px Cinzel, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(letter, x, y + symSize + 18);
+  });
+
+  canvas.toBlob(blob => {
+    const item = new ClipboardItem({ 'image/png': blob });
+    navigator.clipboard.write([item]).then(() => {
+      showToast('\u{1F34A} Reference chart copied \u2014 paste it to any AI to help decode!');
+    }).catch(() => {
+      showToast('Could not copy chart to clipboard.');
+    });
+  });
 }
 
 // ─── INIT ───
